@@ -1,9 +1,15 @@
 // 内部 API - 喜欢的歌曲管理
+import { ref } from 'vue'
 import type { Song } from './types'
 
 // ============ 本地存储方案（主要使用） ============
 
 const LOCAL_LIKED_KEY = 'linmusic-liked'
+const likedSongs = ref<Song[]>(getLocalLikedSongs())
+
+export function useLikedSongs() {
+  return likedSongs
+}
 
 function getLocalLikedSongs(): Song[] {
   try {
@@ -22,6 +28,7 @@ function addLocalLikedSong(song: Song): boolean {
       songs.unshift(song)
       localStorage.setItem(LOCAL_LIKED_KEY, JSON.stringify(songs))
     }
+    likedSongs.value = songs
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('linmusic-liked-changed'))
     }
@@ -36,6 +43,7 @@ function removeLocalLikedSong(platform: string, songId: string): boolean {
     const songs = getLocalLikedSongs()
     const filtered = songs.filter(s => !(s.id === songId && s.platform === platform))
     localStorage.setItem(LOCAL_LIKED_KEY, JSON.stringify(filtered))
+    likedSongs.value = filtered
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('linmusic-liked-changed'))
     }
@@ -59,7 +67,8 @@ function checkLocalLikedSongs(songs: Array<{ id: string; platform: string }>): R
 
 // 获取喜欢的歌曲列表
 export async function getLikedSongs(): Promise<Song[]> {
-  return getLocalLikedSongs()
+  likedSongs.value = getLocalLikedSongs()
+  return likedSongs.value
 }
 
 // 添加喜欢的歌曲

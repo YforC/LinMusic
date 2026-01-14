@@ -130,7 +130,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, onActivated } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { getLikedSongs, unlikeSong as apiUnlikeSong } from '@/api/liked'
+import { getLikedSongs, unlikeSong as apiUnlikeSong, useLikedSongs } from '@/api/liked'
 import { formatDuration } from '@/utils/format'
 import { globalToast } from '@/composables/useToast'
 import SongMenu from '@/components/music/SongMenu.vue'
@@ -142,7 +142,7 @@ defineOptions({
 
 const playerStore = usePlayerStore()
 
-const songs = ref<(Song & { likedAt?: string })[]>([])
+const songs = useLikedSongs()
 const isLoading = ref(false)
 
 // 加载喜欢的歌曲
