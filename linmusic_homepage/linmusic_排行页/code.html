@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LinMusic 排行榜 (中文版)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#3713ec",
+                    "primary-dark": "#2a0eb5",
+                    "spotify-green": "#1ed760",
+                    "background-light": "#f6f6f8",
+                    "background-dark": "#121212",
+                    "surface-dark": "#181818",
+                    "surface-light": "#e0e0e5",
+                },
+                fontFamily: {
+                    "display": ["Spline Sans", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "4px", "lg": "8px", "xl": "12px", "full": "9999px"},
+            },
+        },
+    }
+</script>
+<style>
+    body {
+        font-family: "Spline Sans", "Microsoft YaHei", "PingFang SC", sans-serif;
+    }
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #5a5a5a; 
+        border-radius: 0px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #808080; 
+    }.rank-num { display: block; }
+    .rank-play { display: none; }
+    .group:hover .rank-num { display: none; }
+    .group:hover .rank-play { display: block; }
+</style>
+</head>
+<body class="bg-black text-white antialiased overflow-hidden h-screen flex flex-col">
+<div class="flex flex-1 h-full overflow-hidden">
+<aside class="w-[240px] flex-shrink-0 bg-black flex flex-col pt-6 px-2 gap-2 hidden lg:flex">
+<div class="px-6 mb-6 flex items-center gap-2">
+<div class="bg-white text-black rounded-full size-8 flex items-center justify-center font-bold text-xl">L</div>
+<span class="font-bold text-xl tracking-tight">LinMusic</span>
+</div>
+<nav class="flex flex-col gap-1 px-2">
+<a class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded font-bold" href="#">
+<span class="material-symbols-outlined text-[28px] font-variation-settings-'FILL' 1">home</span>
+<span>首页</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded font-bold" href="#">
+<span class="material-symbols-outlined text-[28px]">search</span>
+<span>搜索</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded font-bold" href="#">
+<span class="material-symbols-outlined text-[28px]">leaderboard</span>
+<span>排行榜</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white transition-colors rounded font-bold" href="#">
+<span class="material-symbols-outlined text-[28px]">music_note</span>
+<span>流派</span>
+</a>
+</nav>
+<div class="mt-6 px-4">
+<div class="flex items-center gap-4 text-slate-400 hover:text-white cursor-pointer font-bold mb-2 px-2 py-2">
+<span class="material-symbols-outlined bg-slate-800 p-1 rounded-sm">queue_music</span>
+<span>播放队列</span>
+</div>
+<div class="mx-2 h-[1px] bg-[#282828]"></div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col bg-[#121212] relative overflow-y-auto w-full md:rounded-tl-lg overflow-x-hidden scroll-smooth">
+<div class="absolute top-0 left-0 w-full h-[340px] bg-gradient-to-b from-[#503890] to-[#121212] z-0 pointer-events-none opacity-80"></div>
+<div class="relative z-10 px-6 md:px-8 pt-8 pb-6 flex flex-col md:flex-row items-end gap-6">
+<div class="size-[192px] md:size-[232px] shrink-0 shadow-[0_8px_40px_rgba(0,0,0,0.5)] bg-gradient-to-br from-[#3713ec] to-[#7c3aed] flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[80px]">trophy</span>
+</div>
+<div class="flex flex-col gap-2 w-full pb-2">
+<span class="text-xs font-bold uppercase tracking-wider mt-4 md:mt-0 hidden md:block">排行榜</span>
+<h1 class="text-3xl md:text-[72px] lg:text-[86px] md:leading-none font-black tracking-tighter text-white mb-2 line-clamp-2">全球 50 强</h1>
+<p class="text-white/70 text-sm font-medium">LinMusic 上目前播放次数最多的歌曲。每日更新。</p>
+<div class="flex items-center gap-1 mt-2 text-sm font-bold flex-wrap">
+<div class="bg-spotify-green text-black size-6 rounded-full flex items-center justify-center text-[10px] font-black">L</div>
+<span class="hover:underline cursor-pointer">LinMusic</span>
+<span class="text-white/70 font-normal">• 50 首歌曲, </span>
+<span class="text-white/70 font-normal">2 小时 30 分钟</span>
+</div>
+</div>
+</div>
+<div class="relative z-10 px-6 md:px-8 py-6 bg-[#121212]/30 backdrop-blur-sm sticky -top-[1px] md:static">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4 md:gap-6">
+<button class="size-14 bg-spotify-green rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg text-black">
+<span class="material-symbols-outlined text-[32px] font-variation-settings-'FILL' 1">play_arrow</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[32px]">favorite</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[32px]">more_horiz</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-slate-400 uppercase tracking-widest mr-2 hidden sm:block">列表</span>
+<div class="flex items-center bg-white/10 rounded-full p-1">
+<button class="px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold shadow-sm transition-all hover:bg-white/20">
+                            日榜
+                        </button>
+<button class="px-4 py-1.5 rounded-full text-slate-300 hover:text-white text-xs font-bold transition-all hover:bg-white/5">
+                            周榜
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 md:px-8 sticky top-0 bg-[#121212] z-20 border-b border-white/10 pb-2 pt-2 mb-2 shadow-sm">
+<div class="grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 text-sm font-normal text-slate-400 items-center px-4">
+<div class="text-center text-base">#</div>
+<div class="text-xs font-medium uppercase tracking-wider">标题</div>
+<div class="hidden md:block text-xs font-medium uppercase tracking-wider">专辑</div>
+<div class="hidden lg:block text-xs font-medium uppercase tracking-wider">添加日期</div>
+<div class="justify-self-end"><span class="material-symbols-outlined text-[18px]">schedule</span></div>
+</div>
+</div>
+<div class="px-6 md:px-8 pb-32 flex flex-col gap-1">
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num text-spotify-green">1</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Midnight City" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdhCLyM1j5CElPiSKdJjsVcmM9O2KAFjN1qArzJqsgbYnuxJFBR5lncctePM5iwgTV0ldSoDjeXqFp_sx1DTtO7_BIDjF7pueiT3bgaM7-LWX-Gla-IwcajMeTEPuxM_UrhedPjlQOmgxgKWuZ9chzpj9NpZVHJj5mrCbR7uCvCaWXryO5Jqy3xcd3GYNgs0VWoXaK_-wj-sVkFOBxgAWosQF7kw9T10vIe8XlfVrqMDNUB8ME0xTbUtSv7E0j_D_bTkqf5eFpUOwn"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">Midnight City</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">M83</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">Hurry Up, We're Dreaming</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">2 天前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">3:45</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">2</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Blinding Lights" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuDXqmuR0pKGfSqTt2PBA50RsDVuwZ0bDL2ZLQIFurag0iBo5S1s1Ix7ILdgqxttDp_Ot-Bq8BHEvIPXJ6erM-6E1PLvFbYVVj4QDh9sLCsPmrNYFJAMXUGQ7tNVjl0XHcPIgKMmcNZfxu_zpaX6M85DjcLb5jdtUi61rsKd4Ukg33Ge2BGelmAZEdcowXrTKy80n1rPiRKBlfgOOI7Vp3hjjC35c0zbeubwZHq3IcBhBOcQ5kUUU2f29y7GJOKMc27a2_wXzQ7YBU"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">Blinding Lights</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">The Weeknd</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">After Hours</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">5 天前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">3:20</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">3</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Levitating" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK-QXxHw7_6c5hazwLlCuSm17L5EbPN7qyaVCCeseH186xM4i3TibGn9zdxmkI-IDwQTluRVGId1rjXSYYlHnU1CGhEAjac9ES20N0BEtcWOx7pkKyy8WON1m7nbHu9N05fxYTHKkTFB4eHE_3kiQNxOEDpQ_xfS69k2RSYWfX1Gsd_IEu4FxgAf6H-Yfsvte7hMLrHH3znWsaHgVCY57uxdIErWoiRmp-zdtDZnFSpj6P-HC5n8E5MEa5BoI1hy6SCmNIGckxauMM"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">Levitating</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">Dua Lipa</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">Future Nostalgia</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">1 周前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">3:23</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">4</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Heat Waves" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTFihkX8FCYgTJFMPV7GU61EBY6bIsYa-RA8dPqvRQg7958y1zoIxj-EQT2UYNA0ZdS2TPR8DeYPYfGfbs3aWlKOdTaGAuqe6eQtNGkuTJyCcqfMyDFYWE2RlxVlxJQ-Cjaop7ihex5KX6kMJ20Zp7IJNL82BosqZzZK15Y3B218KqhBScilsfUC8QibCjiNyMmtEZWftJEtQ8t1cDaB6jIPKtf4HgGMSOK7JIBT8kiSEUD0BvOCyHMplW7AuEEdGVIHxPS__sUaB5"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">Heat Waves</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">Glass Animals</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">Dreamland</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">2 周前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">3:58</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">5</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Stay" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBi9M6tP0d_ZWlpT-GQ5YGT6AYJY0lW6Eogtb_CQgwgjBfV3Tv0rECu-X7n6udwHbFBEUimef_acRfoSHZw9GBHiK_nnMyHZQZAVMXg1kzc1FaU58mIyW0AQLgAC_MyiIyHTWg__p3OICmmsrZxx4EYSXQRhldO40GaBF5V7pc_Ehfho1_d4N3iZTwWndnS5cqzUtUpUGzSfQnEM_GKEzeZmhE0-YVJTCAx2SsJfthBd6q0Z01Q_dBpiH4s1eGiL3zzgQF39tWh11Yc"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">Stay</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">The Kid LAROI</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">F*CK LOVE 3</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">1 个月前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">2:21</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">6</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="As It Was" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn5RlBTZS747ubAaiMI61IcbovYOj-T3dw3LgtHrkxdJfByilHwOpY_4CSJ2uYNhjb-y2D4R73mUcFm7aluy0AA_dLG7ylvgYN6rkIIP8rmqmmOKuGsK-0TRCPE-72LQYHqsK4mNu2Pxy8tzdYVrRmgsgRthrXi5VzjMkdaWz5zNsC3ukYXwq3gpm2T2cc9fI6JId4uUocnmZBFqk_gyJeiyCTMpP6Pl0DqHER9cEK6D1w4VR7kvyAZrC7z0gcEEKP5Yn-55mjqNZq"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">As It Was</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">Harry Styles</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">Harry's House</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">1 个月前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">2:47</div>
+</div>
+<div class="group grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_40px] lg:grid-cols-[20px_6fr_4fr_3fr_minmax(60px,1fr)] gap-4 items-center hover:bg-white/10 rounded-md px-4 py-2 transition-colors cursor-pointer">
+<div class="flex items-center justify-center text-slate-400 font-medium text-base w-full">
+<span class="rank-num">7</span>
+<span class="rank-play text-white material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">play_arrow</span>
+</div>
+<div class="flex items-center gap-4 overflow-hidden">
+<img alt="Good 4 U" class="size-10 rounded shadow-sm object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3EPnLhT8E37GXNzBf44nbfyAKDf3F-hW3dHYAMs_2H5TQMnVWeVJgshKY1_pVxiGtFMN81rh9V4nnovQ023kl7UiWrmDSuPPVX4zJV_Y_1ESSCg_31uRku92w_XXb-M63BOl1eU1PQIbrMulam3y8cgvg9fSk2r-DM0Sg0ZCIhwJW-HlMd4jDPYh430C048b3RDcC2eeQ98OHDgNtC3Ni3bGnzh5xSbWduHn-JFns8ptpiPBy5C_R6Yd0ogaJ2hjkV47404R48DbT"/>
+<div class="flex flex-col truncate pr-2">
+<span class="text-white font-medium truncate text-base mb-0.5">good 4 u</span>
+<span class="text-sm text-slate-400 group-hover:text-white hover:underline truncate">Olivia Rodrigo</span>
+</div>
+</div>
+<div class="hidden md:block text-slate-400 text-sm group-hover:text-white hover:underline truncate">SOUR</div>
+<div class="hidden lg:block text-slate-400 text-sm truncate">2 个月前</div>
+<div class="justify-self-end text-slate-400 text-sm font-variant-numeric tabular-nums">2:58</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="fixed bottom-0 w-full z-50 bg-[#181818] border-t border-[#282828] h-[90px] px-4">
+<div class="flex items-center justify-between h-full">
+<div class="flex items-center gap-4 w-[30%] min-w-[180px]">
+<img alt="Current Song" class="hidden sm:block size-14 rounded shadow-md object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBapmN-S_wjp2tuAHTGjrZizJkuv9J3n7pvuvrUpgmekza9Ex_gxxKYTa_HercWQhLW6lJ_iv8S37_mLT0SVQ6KoPUaDYt03MUuzJMsUZrdHB9ajwQxfIuqQ_TLPD3Gvd0v3h0iO04iLyTyLnGbFwrS0Ws2p31yyBxQJpb3epDY8KooHfQPG__a43nmejuzr0iBaod2PzMjufw3Q_x7MQF_mTKlhb2ggGdK0vFtXF2UbUk5EMbZ53jx4xPbcslnRtsg31DJ9MLFObOP"/>
+<div class="flex flex-col justify-center overflow-hidden">
+<p class="text-white text-sm font-medium hover:underline cursor-pointer truncate">Midnight City</p>
+<p class="text-slate-400 text-xs hover:text-white hover:underline cursor-pointer truncate">M83</p>
+</div>
+<button class="text-spotify-green ml-2 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px] font-variation-settings-'FILL' 1">favorite</span>
+</button>
+</div>
+<div class="flex flex-col items-center flex-1 max-w-[40%]">
+<div class="flex items-center gap-5 mb-1.5">
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">shuffle</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[28px] font-variation-settings-'FILL' 1">skip_previous</span>
+</button>
+<button class="size-8 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-all">
+<span class="material-symbols-outlined text-[24px] font-variation-settings-'FILL' 1">play_arrow</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[28px] font-variation-settings-'FILL' 1">skip_next</span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">repeat</span>
+</button>
+</div>
+<div class="w-full flex items-center gap-2 text-xs font-medium text-slate-400">
+<span>1:17</span>
+<div class="relative flex-1 h-1 bg-[#4d4d4d] rounded-full group cursor-pointer">
+<div class="absolute top-0 left-0 h-full w-[35%] bg-white group-hover:bg-spotify-green rounded-full"></div>
+<div class="absolute top-1/2 left-[35%] -translate-y-1/2 size-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span>3:45</span>
+</div>
+</div>
+<div class="flex items-center justify-end gap-3 w-[30%] min-w-[180px]">
+<button class="hidden sm:block text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">lyrics</span>
+</button>
+<button class="hidden sm:block text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">queue_music</span>
+</button>
+<button class="hidden sm:block text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">devices</span>
+</button>
+<div class="flex items-center gap-2 w-24 group">
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">volume_up</span>
+</button>
+<div class="hidden sm:block flex-1 h-1 bg-[#4d4d4d] rounded-full cursor-pointer relative">
+<div class="h-full w-[70%] bg-white group-hover:bg-spotify-green rounded-full transition-colors"></div>
+</div>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

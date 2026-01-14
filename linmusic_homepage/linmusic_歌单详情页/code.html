@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LinMusic - 歌单详情</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec6d",
+                        "primary-dark": "#0fb654",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#121212",
+                        "surface-dark": "#181818",
+                        "surface-highlight": "#282828",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "Noto Sans SC", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for Webkit */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .glass-header {
+            background: linear-gradient(180deg, rgba(35, 72, 51, 0.8) 0%, #121212 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-white font-display overflow-hidden h-screen flex flex-col selection:bg-primary selection:text-black">
+<div class="flex flex-1 overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-[240px] md:w-[280px] bg-black flex-shrink-0 flex flex-col h-full gap-2 p-2">
+<!-- Logo Area -->
+<div class="px-4 py-5 flex items-center gap-3">
+<div class="size-8 bg-white rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-black" style="font-size: 20px;">graphic_eq</span>
+</div>
+<h1 class="text-white text-xl font-bold tracking-tight">LinMusic</h1>
+</div>
+<!-- Main Nav -->
+<nav class="flex flex-col gap-1 px-2">
+<a class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-105 transition-transform">home</span>
+<span class="font-medium">首页</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-105 transition-transform">search</span>
+<span class="font-medium">搜索</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:text-white transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-105 transition-transform">library_music</span>
+<span class="font-medium">你的音乐库</span>
+</a>
+</nav>
+<!-- Library/Playlists Section -->
+<div class="mt-4 flex-1 flex flex-col gap-2 overflow-hidden">
+<div class="px-6 flex items-center justify-between">
+<p class="text-gray-400 text-xs font-bold uppercase tracking-wider">我的歌单</p>
+<span class="material-symbols-outlined text-gray-400 hover:text-white cursor-pointer text-lg">add</span>
+</div>
+<div class="px-2 mt-2">
+<button class="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 transition-colors rounded-lg text-white group">
+<div class="size-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">favorite</span>
+</div>
+<span class="font-medium text-sm">已点赞歌曲</span>
+</button>
+</div>
+<div class="px-2 overflow-y-auto flex-1 custom-scrollbar">
+<a class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg text-sm truncate" href="#">
+<span>我的私藏歌单</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg text-sm truncate" href="#">
+<span>周杰伦精选</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg text-sm truncate" href="#">
+<span>Driving Music 2024</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg text-sm truncate" href="#">
+<span>纯音乐/学习</span>
+</a>
+</div>
+</div>
+<!-- Create Playlist CTA -->
+<div class="p-2 border-t border-white/10">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 text-white text-sm font-bold border border-gray-600 rounded-full hover:border-white transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+<span>新建歌单</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 bg-[#121212] relative overflow-y-auto scroll-smooth">
+<!-- Background Gradient for Header -->
+<div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#2e5c46] to-[#121212] pointer-events-none opacity-60"></div>
+<!-- Header Content -->
+<header class="relative px-8 pt-16 pb-6 flex flex-col md:flex-row gap-6 items-end z-10">
+<!-- Cover Art -->
+<div class="shrink-0 shadow-2xl shadow-black/50 group cursor-pointer relative">
+<div class="size-48 md:size-60 bg-surface-highlight rounded-lg bg-cover bg-center shadow-lg transition-all duration-300 group-hover:scale-[1.02]" data-alt="Abstract moody playlist cover art featuring dark green tones and waves" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCHoj_1QfwC8nF4wvw54pUjlyhWnM1qUXISR9zKtwl8EH6AKWQPV-pJi5_WsX1IRWSfkrt-S_e8Hm_aIwDZ8xs20LlkUmSFBCfsY8_fd-aLK1jb6Nazh74zfGjRu4gdhagi2II1V_ZvJf_aCScM90mF5-auc4PwURDJIyKrGfNjG3G0fhNQkWpRro2WlJWS1v5GqNwn6NMyggtTxcLN5ZQ83BlYZt_rZxblzeH1yyLHIV3NxrOsQoHxBFYpWHjUF3laieNeum3Yl4rO');">
+</div>
+</div>
+<!-- Info -->
+<div class="flex flex-col gap-2 w-full">
+<span class="text-xs font-bold uppercase tracking-wide text-white/90">歌单</span>
+<h1 class="text-4xl md:text-6xl font-black text-white tracking-tight py-2">我的私藏歌单</h1>
+<p class="text-gray-300 text-sm md:text-base font-medium mt-2">本地保存的歌单 • LinMusic • 28首歌曲, 1小时 15分钟</p>
+</div>
+</header>
+<!-- Actions Bar -->
+<div class="relative px-8 py-6 z-10 flex items-center gap-6">
+<button class="size-14 bg-primary hover:scale-105 hover:bg-primary-dark transition-all rounded-full flex items-center justify-center text-black shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-4xl ml-1 fill-1">play_arrow</span>
+</button>
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-4xl">favorite</span>
+</button>
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">more_horiz</span>
+</button>
+</div>
+<!-- Songs List Table -->
+<div class="relative z-10 px-8 pb-32">
+<div class="w-full">
+<!-- Table Header -->
+<div class="grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-2 border-b border-white/10 text-gray-400 text-sm font-medium uppercase tracking-wider sticky top-0 bg-[#121212]/95 backdrop-blur-sm z-20">
+<div class="w-8 text-center">#</div>
+<div>标题</div>
+<div class="hidden md:block">专辑</div>
+<div class="hidden sm:block">歌手</div>
+<div class="w-16 text-right"><span class="material-symbols-outlined text-lg">schedule</span></div>
+</div>
+<!-- Rows -->
+<div class="flex flex-col mt-2">
+<!-- Song 1 -->
+<div class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-default">
+<div class="w-8 text-center text-gray-400 relative flex items-center justify-center">
+<span class="group-hover:hidden font-medium">1</span>
+<span class="material-symbols-outlined hidden group-hover:block text-white text-lg">play_arrow</span>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="text-white font-medium text-base truncate text-primary">夜曲</span>
+</div>
+<div class="hidden md:block text-gray-400 text-sm truncate">十一月的萧邦</div>
+<div class="hidden sm:block text-gray-400 text-sm truncate hover:text-white cursor-pointer hover:underline">周杰伦</div>
+<div class="w-16 text-right text-gray-400 text-sm font-variant-numeric tabular-nums">3:48</div>
+</div>
+<!-- Song 2 -->
+<div class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-default">
+<div class="w-8 text-center text-gray-400 relative flex items-center justify-center">
+<span class="group-hover:hidden font-medium">2</span>
+<span class="material-symbols-outlined hidden group-hover:block text-white text-lg">play_arrow</span>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="text-white font-medium text-base truncate">光年之外</span>
+</div>
+<div class="hidden md:block text-gray-400 text-sm truncate">摩天动物园</div>
+<div class="hidden sm:block text-gray-400 text-sm truncate hover:text-white cursor-pointer hover:underline">邓紫棋</div>
+<div class="w-16 text-right text-gray-400 text-sm font-variant-numeric tabular-nums">3:55</div>
+</div>
+<!-- Song 3 -->
+<div class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-default">
+<div class="w-8 text-center text-gray-400 relative flex items-center justify-center">
+<span class="group-hover:hidden font-medium">3</span>
+<span class="material-symbols-outlined hidden group-hover:block text-white text-lg">play_arrow</span>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="text-white font-medium text-base truncate">青花瓷</span>
+</div>
+<div class="hidden md:block text-gray-400 text-sm truncate">我很忙</div>
+<div class="hidden sm:block text-gray-400 text-sm truncate hover:text-white cursor-pointer hover:underline">周杰伦</div>
+<div class="w-16 text-right text-gray-400 text-sm font-variant-numeric tabular-nums">3:59</div>
+</div>
+<!-- Song 4 -->
+<div class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-default">
+<div class="w-8 text-center text-gray-400 relative flex items-center justify-center">
+<span class="group-hover:hidden font-medium">4</span>
+<span class="material-symbols-outlined hidden group-hover:block text-white text-lg">play_arrow</span>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="text-white font-medium text-base truncate">年少有为</span>
+</div>
+<div class="hidden md:block text-gray-400 text-sm truncate">耳朵</div>
+<div class="hidden sm:block text-gray-400 text-sm truncate hover:text-white cursor-pointer hover:underline">李荣浩</div>
+<div class="w-16 text-right text-gray-400 text-sm font-variant-numeric tabular-nums">4:39</div>
+</div>
+<!-- Song 5 -->
+<div class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-default">
+<div class="w-8 text-center text-gray-400 relative flex items-center justify-center">
+<span class="group-hover:hidden font-medium">5</span>
+<span class="material-symbols-outlined hidden group-hover:block text-white text-lg">play_arrow</span>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="text-white font-medium text-base truncate">修炼爱情</span>
+</div>
+<div class="hidden md:block text-gray-400 text-sm truncate">因你而在</div>
+<div class="hidden sm:block text-gray-400 text-sm truncate hover:text-white cursor-pointer hover:underline">林俊杰</div>
+<div class="w-16 text-right text-gray-400 text-sm font-variant-numeric tabular-nums">4:47</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Fixed Bottom Player -->
+<footer class="h-[90px] bg-surface-dark border-t border-[#282828] px-4 flex items-center justify-between z-50 flex-shrink-0">
+<!-- Left: Now Playing -->
+<div class="flex items-center gap-4 w-[30%] min-w-[200px]">
+<div class="size-14 rounded-md bg-cover bg-center overflow-hidden relative group" data-alt="Small album art of current playing song" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCsdUTeqcyPB8b4p4_fr2O_d8v8iV7DSfpITUG9LfG0RmXtc2Kajgn1mIPT8NU4-ikdrQpX5nu-mI43Z0usQUJ642EEsho73J48GObuTdcli7C22tUgqohc7HHO9aa_-uUhJyGu6Zeap7amSLAFjTeXPp7Cshqz5Rf95DqHyMvRiPmkm2ZgpRdTW-YeVj0xIENR-lF7yz89k1-fmmwBrF-0T2UbKv7mvyxTdhkiRBEqCtidqTGjXqACxumCBsojDctGObqsgpzlacwv');">
+<!-- Hover expand arrow icon could go here -->
+</div>
+<div class="flex flex-col justify-center overflow-hidden">
+<a class="text-white text-sm font-bold hover:underline truncate" href="#">夜曲</a>
+<a class="text-gray-400 text-xs hover:text-white hover:underline truncate" href="#">周杰伦</a>
+</div>
+<button class="ml-2 text-primary">
+<span class="material-symbols-outlined text-[20px] fill-1">favorite</span>
+</button>
+</div>
+<!-- Center: Controls -->
+<div class="flex flex-col items-center max-w-[45%] w-full gap-1">
+<div class="flex items-center gap-6">
+<button class="text-gray-400 hover:text-white transition-colors" title="随机播放">
+<span class="material-symbols-outlined text-[20px]">shuffle</span>
+</button>
+<button class="text-gray-300 hover:text-white transition-colors" title="上一首">
+<span class="material-symbols-outlined text-[28px] fill-1">skip_previous</span>
+</button>
+<button class="size-8 bg-white hover:scale-105 transition-transform rounded-full flex items-center justify-center text-black" title="播放/暂停">
+<span class="material-symbols-outlined text-[24px] fill-1">play_arrow</span>
+</button>
+<button class="text-gray-300 hover:text-white transition-colors" title="下一首">
+<span class="material-symbols-outlined text-[28px] fill-1">skip_next</span>
+</button>
+<button class="text-gray-400 hover:text-white transition-colors" title="循环播放">
+<span class="material-symbols-outlined text-[20px]">repeat</span>
+</button>
+</div>
+<div class="w-full flex items-center gap-2 text-xs text-gray-400 font-medium font-variant-numeric tabular-nums">
+<span>1:17</span>
+<div class="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer group">
+<div class="w-[33%] h-full bg-primary rounded-full group-hover:bg-primary-dark relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 size-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-md"></div>
+</div>
+</div>
+<span>3:48</span>
+</div>
+</div>
+<!-- Right: Volume & Extras -->
+<div class="flex items-center justify-end gap-3 w-[30%] min-w-[200px]">
+<button class="text-gray-400 hover:text-white">
+<span class="material-symbols-outlined text-[20px]">lyrics</span>
+</button>
+<button class="text-gray-400 hover:text-white">
+<span class="material-symbols-outlined text-[20px]">queue_music</span>
+</button>
+<div class="flex items-center gap-2 w-24 md:w-32 group">
+<button class="text-gray-400 hover:text-white">
+<span class="material-symbols-outlined text-[20px]">volume_up</span>
+</button>
+<div class="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer overflow-hidden">
+<div class="w-[70%] h-full bg-white group-hover:bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

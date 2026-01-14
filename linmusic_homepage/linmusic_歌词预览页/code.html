@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LinMusic - 歌词预览页</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3713ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#131022",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "Noto Sans SC", "sans-serif"],
+                        "sans": ["Spline Sans", "Noto Sans SC", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Smooth fade mask for lyrics */
+        .lyrics-mask {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen w-screen overflow-hidden flex flex-col relative text-white selection:bg-primary/50">
+<!-- Background Layer: Blurred Album Art -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute inset-0 bg-cover bg-center blur-[100px] scale-110 opacity-60 dark:opacity-40 transition-all duration-700" data-alt="Abstract blurred gradient background resembling album art colors" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAeKog0E1Pmow_coW9THLAxroWTadjizcWFPubDAoENIVNtUUXE24Fv_cSnVTqfLxDEM7xOwRnpRxDrPJb45ucoXhe2dBB8L6H2Fl8scKt4zpIfrzCcmvxdV3Bq5VRvitBHNosoWlTzKN4n_HG25fjmmzUpg-Qk-C39hHW5MnGIebGmPAItN4L7EYxWeQrR2nGF97oMfJNJeA6u_MVcxD4c_RFZuE_NacC7Sz7kHQBUKJwK689_J9u8dYTlutkwnaIpfC_V_aDF5-74');">
+</div>
+<!-- Dark Overlay for contrast -->
+<div class="absolute inset-0 bg-[#000000]/40 backdrop-brightness-75"></div>
+</div>
+<!-- Main Layout Container -->
+<div class="relative z-10 flex flex-col h-full w-full max-w-[1600px] mx-auto p-6 md:p-10">
+<!-- Header / Navigation -->
+<header class="flex items-center justify-between w-full h-16 shrink-0 z-20">
+<button class="flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors text-white group">
+<span class="material-symbols-outlined group-hover:-translate-y-0.5 transition-transform" style="font-size: 24px;">keyboard_arrow_down</span>
+</button>
+<div class="flex flex-col items-center gap-1 opacity-0 md:opacity-100 transition-opacity">
+<span class="text-xs font-bold tracking-widest uppercase text-white/60">Playing From Playlist</span>
+<span class="text-sm font-semibold text-white">Greatest Works of Art</span>
+</div>
+<button class="flex items-center justify-center size-10 rounded-full bg-transparent hover:bg-white/10 transition-colors text-white">
+<span class="material-symbols-outlined" style="font-size: 24px;">more_horiz</span>
+</button>
+</header>
+<!-- Main Content Area: Split View -->
+<main class="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 overflow-hidden min-h-0 py-4">
+<!-- Left: Album Art -->
+<div class="w-full md:w-5/12 lg:w-4/12 flex items-center justify-center md:justify-end shrink-0 max-h-[40vh] md:max-h-full">
+<div class="relative aspect-square w-full max-w-[400px] md:max-w-[500px] rounded-lg shadow-2xl overflow-hidden group">
+<img alt="Album cover showing artistic abstract shapes" class="w-full h-full object-cover transition-transform duration-[30s] ease-linear group-hover:scale-105" data-alt="Album cover art showing moody abstract shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbEmWwOglyQiQlAIa7rUpxqVSb2F6_jy3ZcgjNL8rmiflxnfmKqN1O3yz7Aw7MPNr0U-Aq_bspUQw2S7R8P-g6UbS_hCMB6WFFe3GjxbkOf7j_ktnBG5m2PzZq-54h_Q5xpfy-VVZjXTtKM0xaZxzzbFoh5gUu4dNWaQvUJ0SIGmSOCAmBPzJRj1Vk8PnMKBhiamL_FSkNcfhu4xhyjaNMO5iWAJKpGUWAhE_54axB9GQyTnXgoNcLLeVoCm3_B1gUQJlQkMDTkbYN"/>
+<!-- Subtle inner border/shine -->
+<div class="absolute inset-0 rounded-lg border border-white/10 pointer-events-none"></div>
+</div>
+</div>
+<!-- Right: Lyrics -->
+<div class="w-full md:w-7/12 lg:w-6/12 h-full flex flex-col justify-center relative">
+<div class="lyrics-mask h-full w-full overflow-y-auto no-scrollbar scroll-smooth py-20 px-4">
+<div class="flex flex-col gap-6 md:gap-8 items-start justify-start transition-all duration-500">
+<!-- Previous Lines -->
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            老旧的车站 充满了遗憾
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            当你收到信 我还在流浪
+                        </p>
+<!-- Active Line -->
+<div class="py-2 origin-left">
+<h1 class="text-3xl md:text-5xl font-bold text-white leading-tight drop-shadow-lg tracking-tight">
+                                那年的约克郡寒冷
+                            </h1>
+</div>
+<!-- Upcoming Lines -->
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            就像是一张 老唱片
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            在旋转着 感觉
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            教堂的钟声 还在敲着
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            为了谁在祈祷 呢
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            我在广场的 鸽子
+                        </p>
+<p class="text-xl md:text-2xl font-semibold text-white/30 hover:text-white/60 transition-colors cursor-pointer origin-left">
+                            飞走的那一刻 醒了
+                        </p>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer: Playback Controls -->
+<footer class="w-full h-24 shrink-0 flex flex-col justify-center z-20 pt-4">
+<div class="flex items-center justify-between gap-4">
+<!-- Song Info -->
+<div class="flex items-center gap-4 w-1/4 min-w-[200px]">
+<!-- Hidden on mobile, visual anchor on desktop -->
+<div class="hidden lg:flex flex-col">
+<span class="text-lg font-bold text-white leading-tight truncate">还在流浪</span>
+<span class="text-sm font-medium text-white/60 hover:text-white transition-colors cursor-pointer truncate">周杰伦</span>
+</div>
+<button class="text-white/40 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">favorite</span>
+</button>
+</div>
+<!-- Main Player Controls -->
+<div class="flex flex-col items-center gap-2 flex-1 max-w-2xl">
+<div class="flex items-center gap-6">
+<button class="text-white/60 hover:text-white transition-colors p-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">shuffle</span>
+</button>
+<button class="text-white/80 hover:text-white transition-colors p-1">
+<span class="material-symbols-outlined fill-1" style="font-size: 32px;">skip_previous</span>
+</button>
+<button class="bg-white text-black rounded-full size-14 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-white/10">
+<span class="material-symbols-outlined" style="font-size: 32px; font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="text-white/80 hover:text-white transition-colors p-1">
+<span class="material-symbols-outlined fill-1" style="font-size: 32px;">skip_next</span>
+</button>
+<button class="text-primary transition-colors p-2 relative">
+<span class="material-symbols-outlined" style="font-size: 20px;">repeat_one</span>
+<div class="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 bg-primary rounded-full"></div>
+</button>
+</div>
+<!-- Progress Bar -->
+<div class="w-full flex items-center gap-3 text-xs font-medium text-white/60 font-sans">
+<span>1:42</span>
+<div class="relative group h-1 w-full bg-white/20 rounded-full cursor-pointer flex items-center">
+<!-- Background track -->
+<div class="absolute h-full w-full bg-white/10 rounded-full"></div>
+<!-- Filled track -->
+<div class="h-full bg-white rounded-full relative z-10 group-hover:bg-primary transition-colors" style="width: 35%;"></div>
+<!-- Thumb (visible on hover) -->
+<div class="size-3 bg-white rounded-full absolute left-[35%] -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md"></div>
+</div>
+<span>4:15</span>
+</div>
+</div>
+<!-- Right Side Controls (Volume, Queue) -->
+<div class="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
+<button class="text-white/70 hover:text-white p-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">mic</span>
+</button>
+<button class="text-white/70 hover:text-white p-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">queue_music</span>
+</button>
+<button class="text-white/70 hover:text-white p-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">devices</span>
+</button>
+<div class="flex items-center gap-2 w-24 group">
+<span class="material-symbols-outlined text-white/70" style="font-size: 20px;">volume_up</span>
+<div class="h-1 flex-1 bg-white/20 rounded-full relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 bg-white group-hover:bg-primary w-2/3 rounded-full"></div>
+</div>
+</div>
+<button class="text-white/70 hover:text-white p-2 ml-1">
+<span class="material-symbols-outlined" style="font-size: 20px;">open_in_full</span>
+</button>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

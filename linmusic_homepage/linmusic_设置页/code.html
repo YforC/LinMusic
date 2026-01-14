@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LinMusic 设置页 (中文版)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3713ec", // Brand color
+                        "spotify-green": "#1db954", // Optional accent if needed, sticking to primary for now
+                        "background-dark": "#121212", // Deep black
+                        "surface-dark": "#181818", // Slightly lighter for cards/bars
+                        "surface-hover": "#282828",
+                        "text-main": "#ffffff",
+                        "text-secondary": "#a7a7a7",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+    width: 8px
+    }
+::-webkit-scrollbar-track {
+    background: transparent
+    }
+::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px
+    }input[type=range] {
+    -webkit-appearance: none;
+    background: transparent
+    }
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    margin-top: -4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3)
+    }
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: #4d4d4d;
+    border-radius: 2px
+    }
+input[type=range]:hover::-webkit-slider-runnable-track {
+    background: #3713ec;}
+input[type=range]:focus {
+    outline: none
+    }select {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB6mKiKw4-AIE5-qsnjPOhNTp2KJsSaIPSoQnRVuVIMN1HXMB774VvD6SYJbTCO45Pezlt3MEtZniz1NZG5Uh4roicu372hiYp2RtpwEuQhczFhNpGBuZHkFusQ9XbnklI6pxAtJCenbtWCQG1dhrj4AjltkEmvEkNCrCFac1LktFrXPIuGOu7HIWWFAdY_f9m8gMDjAYO34Iuw-hvzpjNZASKVLAsDhC9GrONut3OYJ-bfKcTXsfkMVFCQNPqDNPUAnQ3zppEKTxJj);
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact
+    }</style>
+</head>
+<body class="bg-background-dark font-body text-text-main antialiased overflow-hidden selection:bg-primary selection:text-white h-screen flex">
+<aside class="w-[240px] flex-shrink-0 flex flex-col bg-black h-full z-20">
+<div class="flex flex-col gap-6 p-6">
+<div class="flex flex-col mb-2 px-2">
+<h1 class="text-2xl font-display font-bold tracking-tight text-white">LinMusic</h1>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-md hover:bg-surface-hover transition-colors group text-text-secondary hover:text-white" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="font-bold text-sm">首页</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-md hover:bg-surface-hover transition-colors group text-text-secondary hover:text-white" href="#">
+<span class="material-symbols-outlined text-[24px]">search</span>
+<span class="font-bold text-sm">搜索</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-md hover:bg-surface-hover transition-colors group text-text-secondary hover:text-white" href="#">
+<span class="material-symbols-outlined text-[24px]">library_music</span>
+<span class="font-bold text-sm">歌单库</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-md bg-surface-hover text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-bold text-sm">设置</span>
+</a>
+</nav>
+</div>
+<div class="flex-1 overflow-y-auto px-6 pb-6">
+<div class="pt-4 border-t border-white/10">
+<div class="flex flex-col gap-3 mt-2">
+<div class="h-4 w-24 bg-surface-dark rounded animate-pulse opacity-50"></div>
+<div class="h-4 w-32 bg-surface-dark rounded animate-pulse opacity-50"></div>
+<div class="h-4 w-20 bg-surface-dark rounded animate-pulse opacity-50"></div>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-dark">
+<div class="flex-1 overflow-y-auto pb-32 custom-scrollbar">
+<div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/10 to-background-dark pointer-events-none"></div>
+<div class="max-w-4xl mx-auto px-8 pt-16 pb-10 relative z-10">
+<div class="mb-10">
+<h1 class="text-4xl font-display font-bold tracking-tight mb-4">设置</h1>
+<p class="text-sm text-text-secondary">您的偏好设置已保存在此浏览器本地。</p>
+</div>
+<section class="mb-10">
+<h2 class="text-2xl font-bold mb-4">音频体验</h2>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">音质选择</span>
+<span class="text-sm text-text-secondary">根据网络情况调整音质</span>
+</div>
+<div>
+<select class="bg-surface-dark hover:bg-surface-hover text-white text-sm font-medium rounded-md border-0 py-2 pl-3 pr-10 cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none transition-colors">
+<option value="low">低</option>
+<option value="medium">中</option>
+<option selected="" value="high">高</option>
+</select>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">淡入淡出</span>
+<span class="text-sm text-text-secondary">让歌曲间的过渡更平滑</span>
+</div>
+<div class="flex items-center gap-4 w-48">
+<span class="text-xs font-mono text-text-secondary w-6 text-right">4s</span>
+<input class="w-full h-1 bg-surface-dark rounded-lg appearance-none cursor-pointer" max="12" min="0" type="range" value="4"/>
+</div>
+</div>
+</div>
+</section>
+<section class="mb-10">
+<h2 class="text-2xl font-bold mb-4">播放设置</h2>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">无缝播放</span>
+<span class="text-sm text-text-secondary">消除歌曲间的静默间隔</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-10 h-6 bg-surface-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary hover:peer-checked:bg-primary/90"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">自动播放类似内容</span>
+<span class="text-sm text-text-secondary">在播放列表结束后续播相似歌曲</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-10 h-6 bg-surface-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary hover:peer-checked:bg-primary/90"></div>
+</label>
+</div>
+</div>
+</section>
+<section class="mb-10">
+<h2 class="text-2xl font-bold mb-4">界面设置</h2>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<span class="text-base font-medium">外观</span>
+<div>
+<select class="bg-surface-dark hover:bg-surface-hover text-white text-sm font-medium rounded-md border-0 py-2 pl-3 pr-10 cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none transition-colors">
+<option value="light">浅色</option>
+<option selected="" value="dark">深色</option>
+<option value="system">跟随系统</option>
+</select>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">语言</span>
+<span class="text-sm text-text-secondary">选择您偏好的语言</span>
+</div>
+<div>
+<select class="bg-surface-dark hover:bg-surface-hover text-white text-sm font-medium rounded-md border-0 py-2 pl-3 pr-10 cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none transition-colors">
+<option>English (US)</option>
+<option selected="">简体中文 (Chinese)</option>
+<option>Spanish</option>
+<option>French</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<section class="mb-24">
+<h2 class="text-2xl font-bold mb-4">数据与存储</h2>
+<div class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<div class="flex flex-col gap-1 pr-8">
+<span class="text-base font-medium">清除本地缓存</span>
+<span class="text-sm text-text-secondary">这将删除保存的设置、播放历史和缓存的歌曲。此操作无法撤消。</span>
+</div>
+<button class="px-5 py-2 rounded-full border border-white/30 text-sm font-bold text-white hover:border-white hover:scale-105 transition-all">
+                                清除数据
+                            </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 w-full h-[90px] bg-surface-dark border-t border-white/5 px-4 z-50 flex items-center justify-between">
+<div class="flex items-center gap-4 w-[30%] min-w-[180px]">
+<div class="h-14 w-14 rounded bg-surface-hover relative overflow-hidden group flex-shrink-0">
+<img class="h-full w-full object-cover" data-alt="Abstract gradient artwork representing the current song album cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDWsxhIe1xDR6Bv-HmglC16imTHkyagpYGD1rGAjIw4_AaiWb3zpRnxZ9K0QbMdbk1RT2zXY9ESTRNPULqHneSgheKQHlOsxFFjenLICnDfvVetMtRRyzpNtF9qBOG3mkY8Tq1KBfoQ4FiUHtrWwJ1gNxQ75oAcR1BkDpyrl8YSIURlEZQy373yKzLzoq015LeKCp5mS99mUEsH1lAoHnYe2DERCEyDS0_FQc73kmPJt_I6TQKxfQpASJqJMkL9i_kNSVNwvH35ACX"/>
+<button class="absolute top-1 right-1 bg-black/60 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-[16px]">expand_less</span>
+</button>
+</div>
+<div class="flex flex-col justify-center overflow-hidden">
+<h4 class="text-sm font-medium text-white truncate cursor-pointer hover:underline">Midnight City</h4>
+<p class="text-xs text-text-secondary truncate cursor-pointer hover:text-white transition-colors">M83</p>
+</div>
+<button class="text-text-secondary hover:text-white transition-colors ml-2" title="添加到喜欢">
+<span class="material-symbols-outlined text-[20px]">favorite_border</span>
+</button>
+</div>
+<div class="flex flex-col items-center flex-1 max-w-[40%]">
+<div class="flex items-center gap-5 mb-2">
+<button class="text-text-secondary hover:text-white transition-colors" title="随机播放">
+<span class="material-symbols-outlined text-[20px]">shuffle</span>
+</button>
+<button class="text-text-secondary hover:text-white transition-colors" title="上一首">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="h-8 w-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all" title="播放/暂停">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="text-text-secondary hover:text-white transition-colors" title="下一首">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+<button class="text-text-secondary hover:text-white transition-colors" title="循环播放">
+<span class="material-symbols-outlined text-[20px]">repeat</span>
+</button>
+</div>
+<div class="w-full flex items-center gap-2 text-xs font-medium text-text-secondary">
+<span>0:45</span>
+<div class="flex-1 h-1 bg-white/10 rounded-full overflow-hidden relative group cursor-pointer">
+<div class="h-full bg-white group-hover:bg-primary w-[25%] rounded-full relative"></div>
+</div>
+<span>4:03</span>
+</div>
+</div>
+<div class="flex items-center justify-end gap-3 w-[30%] min-w-[180px]">
+<button class="text-text-secondary hover:text-white transition-colors" title="歌词">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+<button class="text-text-secondary hover:text-white transition-colors" title="播放列表">
+<span class="material-symbols-outlined text-[20px]">queue_music</span>
+</button>
+<div class="flex items-center gap-2 group w-32">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">volume_up</span>
+<div class="h-1 bg-white/10 rounded-full overflow-hidden relative cursor-pointer flex-1">
+<div class="absolute h-full bg-white group-hover:bg-primary transition-colors w-[70%]"></div>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

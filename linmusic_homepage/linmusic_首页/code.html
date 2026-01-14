@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LinMusic 首页</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1DB954",
+              "background-base": "#121212",
+              "sidebar-base": "#000000",
+              "card-base": "#181818",
+              "card-hover": "#282828",
+              "text-base": "#FFFFFF",
+              "text-subdued": "#A7A7A7",
+              "player-bar": "#000000"
+            },
+            fontFamily: {
+              "display": ["Spline Sans", "PingFang SC", "Microsoft YaHei", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "md": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #5a5a5a; 
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #808080; 
+    }
+    .spotify-gradient {
+        background: linear-gradient(180deg, #2a2a2a 0%, #121212 100%);
+    }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+</head>
+<body class="bg-black font-display text-text-base h-screen overflow-hidden flex flex-col">
+<div class="flex flex-1 h-full overflow-hidden">
+<aside class="w-[280px] hidden md:flex flex-col h-full bg-sidebar-base gap-2 p-2">
+<div class="bg-[#121212] rounded-lg p-6 flex flex-col gap-5">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-white text-[28px]">music_note</span>
+<h1 class="text-xl font-bold tracking-tight">LinMusic</h1>
+</div>
+<nav class="flex flex-col gap-4">
+<a class="flex items-center gap-4 text-white font-bold transition-opacity hover:opacity-100 opacity-90" href="#">
+<span class="material-symbols-outlined fill-1 text-[28px]">home</span>
+<span>首页</span>
+</a>
+<a class="flex items-center gap-4 text-text-subdued font-bold hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px]">search</span>
+<span>搜索</span>
+</a>
+<a class="flex items-center gap-4 text-text-subdued font-bold hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px]">bar_chart</span>
+<span>排行榜</span>
+</a>
+<a class="flex items-center gap-4 text-text-subdued font-bold hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[28px]">settings</span>
+<span>设置</span>
+</a>
+</nav>
+</div>
+<div class="bg-[#121212] rounded-lg flex-1 flex flex-col overflow-hidden">
+<div class="p-4 px-6 shadow-md z-10">
+<div class="flex items-center justify-between text-text-subdued hover:text-white transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[24px]">library_music</span>
+<span class="font-bold">音乐库</span>
+</div>
+<span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 transition-opacity">add</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-2 pb-2">
+<div class="flex flex-col gap-1 mt-2">
+<a class="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer group" href="#">
+<div class="w-12 h-12 rounded-md bg-gradient-to-br from-[#450af5] to-[#c4efd9] flex items-center justify-center flex-shrink-0 opacity-80 group-hover:opacity-100">
+<span class="material-symbols-outlined text-white fill-1">favorite</span>
+</div>
+<div class="flex flex-col">
+<span class="font-medium text-white">我喜欢的音乐</span>
+<span class="text-sm text-text-subdued">playlist</span>
+</div>
+</a>
+<a class="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer" href="#">
+<div class="w-12 h-12 rounded-md bg-[#282828] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-text-subdued">music_note</span>
+</div>
+<div class="flex flex-col">
+<span class="font-medium text-white truncate">每日推荐</span>
+<span class="text-sm text-text-subdued">LinMusic</span>
+</div>
+</a>
+<a class="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer" href="#">
+<div class="w-12 h-12 rounded-md bg-[#282828] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-text-subdued">music_note</span>
+</div>
+<div class="flex flex-col">
+<span class="font-medium text-white truncate">华语流行金曲</span>
+<span class="text-sm text-text-subdued">User</span>
+</div>
+</a>
+<a class="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer" href="#">
+<div class="w-12 h-12 rounded-md bg-[#282828] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-text-subdued">music_note</span>
+</div>
+<div class="flex flex-col">
+<span class="font-medium text-white truncate">助眠歌单</span>
+<span class="text-sm text-text-subdued">User</span>
+</div>
+</a>
+<a class="flex items-center gap-3 p-2 rounded-md hover:bg-[#1a1a1a] cursor-pointer" href="#">
+<div class="w-12 h-12 rounded-md bg-[#282828] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-text-subdued">music_note</span>
+</div>
+<div class="flex flex-col">
+<span class="font-medium text-white truncate">周末派对</span>
+<span class="text-sm text-text-subdued">User</span>
+</div>
+</a>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-background-base relative rounded-lg mt-2 mr-2 mb-2 overflow-x-hidden spotify-gradient">
+<div class="sticky top-0 h-16 w-full z-40 bg-black/20 backdrop-blur-md flex items-center px-8 justify-between">
+<div class="flex gap-4">
+<button class="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white cursor-not-allowed opacity-50"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white cursor-not-allowed opacity-50"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+<div class="flex gap-4">
+<button class="rounded-full bg-white text-black font-bold px-4 py-1.5 text-sm hover:scale-105 transition-transform">探索高级版</button>
+<button class="rounded-full bg-black/50 text-white font-bold px-4 py-1.5 text-sm flex items-center gap-2 hover:scale-105 transition-transform"><span class="material-symbols-outlined text-[18px]">download</span> 安装 App</button>
+</div>
+</div>
+<div class="px-6 pb-8 pt-4 flex flex-col gap-8">
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-2xl font-bold tracking-tight text-white hover:underline cursor-pointer">精选歌单</h2>
+<a class="text-sm font-bold text-text-subdued hover:underline" href="#">查看全部</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+<div class="bg-card-base p-4 rounded-lg hover:bg-card-hover transition-colors group cursor-pointer ease-in-out duration-300">
+<div class="relative w-full aspect-square mb-4 rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB23sHNX5XtuWbduhyKMn_bimrS-hhdt8LdTZA8bZBkc7PvPA3w8f9uil7QUb4Pzy9JQZl4987lVEYcV6pcQUxELx4yZO4z_5PrFjWjjMkC7H_fZM7owTm5yeai0-4B0yISRithUpLdpa3SQvgjg5Zm5Nq-DTtqVLOcZMbR3ByZEldzkzDYusuTZBG7Z0GqIi4-R9sqeZ-sLy_vFPj65Ly6QPwX8UlSNKrRO-1hSzdpOCYhcnDjj2a561ULPlZTx8ZHOUrbTay0Tbpo");'></div>
+<div class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl z-20">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:scale-105 hover:bg-[#1ed760] text-black">
+<span class="material-symbols-outlined text-[28px] fill-1 ml-1">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到喜欢">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到歌单">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<h3 class="text-white font-bold truncate mb-1">全球热歌榜</h3>
+<p class="text-text-subdued text-sm line-clamp-2">当下最火热的单曲，实时更新。</p>
+</div>
+<div class="bg-card-base p-4 rounded-lg hover:bg-card-hover transition-colors group cursor-pointer ease-in-out duration-300">
+<div class="relative w-full aspect-square mb-4 rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuATAniUse0Ivzg_YnMV5KdwFp41bDcy2Ft0k_vn0JfunVV-Jvx5THcKgC0HFFAi8oU7vohsBMz3Cc4nRrZ46meda_tsNsN69p8xdTCdglIUcs4hZjltctvhRD3MeeSINCTU8Y9NyPfTnQi1sabgbucZJTcYsq1APSbQNvUOUk_k234TgAsSz4SMz9o20OFqASgyD08yVRLg911g-eb_glq-BQdXcOuRPxC2UYeWZTrQR7RVPMw_oexzHYPmbgetlmyQRMitOfvXpHT4");'></div>
+<div class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl z-20">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:scale-105 hover:bg-[#1ed760] text-black">
+<span class="material-symbols-outlined text-[28px] fill-1 ml-1">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到喜欢">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到歌单">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<h3 class="text-white font-bold truncate mb-1">午夜兜风</h3>
+<p class="text-text-subdued text-sm line-clamp-2">合成器波与复古浪潮，带你穿越时空。</p>
+</div>
+<div class="bg-card-base p-4 rounded-lg hover:bg-card-hover transition-colors group cursor-pointer ease-in-out duration-300">
+<div class="relative w-full aspect-square mb-4 rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXpEin5OB63SOh1My_iNLS_nrSNTnyPquwXyOOe81DUBlRs5WXoRdmnciqJOzwftSvzGuvmUlQx_UQmRv-zEs_DYN2SRO7sFWQ4OKXBmnLuja9rjKwSnkZk_Uc4iv7SIi7aRUiMi4svyyBdzXcVgNSnLU5TxkvU1Ssnbwkp_WhXWY_rf4M9CqBApxgUr7qToWe5UL4DreaeTjBq5uHleXIzpTHWQpHQMeHwqypXnmyeDKFWzJZDFyiF_MZC7KzMChCk21F0BScIGNm");'></div>
+<div class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl z-20">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:scale-105 hover:bg-[#1ed760] text-black">
+<span class="material-symbols-outlined text-[28px] fill-1 ml-1">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到喜欢">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到歌单">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<h3 class="text-white font-bold truncate mb-1">慵懒 Lo-Fi</h3>
+<p class="text-text-subdued text-sm line-clamp-2">放松/学习专用背景音，享受宁静时刻。</p>
+</div>
+<div class="bg-card-base p-4 rounded-lg hover:bg-card-hover transition-colors group cursor-pointer ease-in-out duration-300">
+<div class="relative w-full aspect-square mb-4 rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBoBN2HBbJqvX6pRKB6ngct2shNOtUWiBCr7Hl-crt45yScQAo1V1h53CpdkEfaD9k2SQzsd3hrTiuV3watNalN6whcfBDARdRHqlGaupZJV_JBS_rKT9-_mONtpKBDL4lQJN_Bb6v82D-WJ5OH3L4JUnD8uUgpz0h4ChKk7lFdJZ7PIUs0yi_jiAvTHOeyNLYGI4QtLTqMjncbfy3y2DJUEGM-1yopRfIruPF_6H0LVqQkziDgNpu89xX7IpXQSWw1YEvzIwhywyja");'></div>
+<div class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl z-20">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:scale-105 hover:bg-[#1ed760] text-black">
+<span class="material-symbols-outlined text-[28px] fill-1 ml-1">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到喜欢">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到歌单">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<h3 class="text-white font-bold truncate mb-1">力量训练</h3>
+<p class="text-text-subdued text-sm line-clamp-2">提升你的运动表现，突破极限。</p>
+</div>
+<div class="bg-card-base p-4 rounded-lg hover:bg-card-hover transition-colors group cursor-pointer ease-in-out duration-300 hidden xl:block">
+<div class="relative w-full aspect-square mb-4 rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAwvvcYRh3HgGYLEbgCqbXeht5BO6FwhAX7Y_0Kb5jmCHSadAyyy_F6iTmAmkhMgwlKhuPwqa5kaLaBcYdwJexMQ2Vnv3jHCMsQhi1KGnQlbteUIZI4qZHSu11gakPIWxTQCQAt-95nF-0L-UHhPjBIHdOW6Ov5xaC9wOD8qEejIpbos-RlMwELr327zXZuBqSVnziALz1oGGfYTgT12-mt5sI5X6zF8fWZ-Xa0t3J92O0hmpHmWWKoK-EHkPdv9iAv01Tcm2Y9SX3X");'></div>
+<div class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl z-20">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:scale-105 hover:bg-[#1ed760] text-black">
+<span class="material-symbols-outlined text-[28px] fill-1 ml-1">play_arrow</span>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到喜欢">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white" title="添加到歌单">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<h3 class="text-white font-bold truncate mb-1">电子精选</h3>
+<p class="text-text-subdued text-sm line-clamp-2">2024 年度最佳 EDM 合集。</p>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-2xl font-bold tracking-tight text-white hover:underline cursor-pointer">最近播放</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="flex items-center gap-4 p-2 rounded-md hover:bg-[hsla(0,0%,100%,.1)] transition-colors group cursor-pointer">
+<div class="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuADeEAKiYQb0BU8YV_m4b7Y3OEAOX-vIFPyETeLva3kLI9weFP2IWl09AkmOG01qtcOYTdzSsnVKJVBAiqhl7ZrDOoj589vqyr5Vv3ZU2UP621BpErm1jRvGyqtoQ4tRpnWnkIHdSwFipyiR5UvGAk1lGLdi4RQ552qfVCVsXJyLxjiy-akz4RLggp5NMqHDCdnEtywdyTbI6OLf_hywodnd6gg3w0Ar7JMgB1WBDJaOuT1mCyalBn56fL1JZC4yT2V8buoBFMGVqIM");'></div>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<h4 class="text-white font-medium truncate text-sm">午夜都市</h4>
+<a class="text-text-subdued text-xs truncate hover:text-white hover:underline" href="#">M83</a>
+</div>
+<div class="flex items-center gap-3 pr-2 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-primary text-[20px] fill-1 hover:scale-110">favorite</span>
+<span class="material-symbols-outlined text-text-subdued text-[20px] hover:text-white hover:scale-110">add_circle</span>
+</div>
+<div class="text-text-subdued text-xs font-mono mr-2">4:12</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-md hover:bg-[hsla(0,0%,100%,.1)] transition-colors group cursor-pointer">
+<div class="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOLziJPatpRIt1CVqgRX8qcOQayL939dljvGM16_BjwDBWvd1tPLu1HHTcTgHMgnVxGk-8op59r5-EULMdh2iQu_WQRw_amTwZOjdnfWvMxdVSd8k2XvyA_hx1XTF3vsKppGagNbYrUpoHEDKIIJhisO51scIwA8KoxGlkfM9oarvUzO8O_HfWrnU4JDuKLjl6dMpJs2ncqKtbkZ4dPGNUqsY6DScaggC2cSxUVX-afio6m_Q2YiBwAJooETmfMGCNr7g2Kex1MuSE");'></div>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<h4 class="text-white font-medium truncate text-sm">炫目之光</h4>
+<a class="text-text-subdued text-xs truncate hover:text-white hover:underline" href="#">威肯</a>
+</div>
+<div class="flex items-center gap-3 pr-2 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-text-subdued text-[20px] hover:text-white hover:scale-110">favorite</span>
+<span class="material-symbols-outlined text-text-subdued text-[20px] hover:text-white hover:scale-110">add_circle</span>
+</div>
+<div class="text-text-subdued text-xs font-mono mr-2">3:20</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-md hover:bg-[hsla(0,0%,100%,.1)] transition-colors group cursor-pointer">
+<div class="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC4OAxjYt7AqTQ7joO9zA8DJjXYEpWQY_L7Yju_4UR8RK4u2TmTZWZVzBDDK05co6HP1sukB8OT-WqGVwu3cgxjoqXSuNtE9a-l4CzWByd2AToWAF9OqU9C2nL_iStg9svxZGHidDxj6ukpbPxoWxUM0xOWW-XQxe-aZgDpqBmPAOCieDh1X-bATepapcqUJ215AIMrWbSS6sc1CRJNMV6sr5iFTc-qH86VhEFHhA5LZKplG0uYCeBqGw9FpjsVD6H-eiupApnNuNz5");'></div>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<h4 class="text-white font-medium truncate text-sm">停留</h4>
+<a class="text-text-subdued text-xs truncate hover:text-white hover:underline" href="#">乐洛伊小子</a>
+</div>
+<div class="flex items-center gap-3 pr-2 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-text-subdued text-[20px] hover:text-white hover:scale-110">favorite</span>
+<span class="material-symbols-outlined text-text-subdued text-[20px] hover:text-white hover:scale-110">add_circle</span>
+</div>
+<div class="text-text-subdued text-xs font-mono mr-2">2:58</div>
+</div>
+</div>
+</section>
+<div class="h-32"></div>
+</div>
+</main>
+</div>
+<div class="fixed bottom-0 left-0 right-0 h-[90px] bg-player-bar border-t border-[#282828] px-4 flex items-center justify-between z-50">
+<div class="flex items-center gap-4 w-[30%] min-w-0">
+<div class="relative group cursor-pointer w-14 h-14 rounded-md overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDgu0nq5Y_vxmEu0jMPfkFMr2okiJkC17jtsDEcl0wg9iQy-mQ8nLXUaM07B3NcRIWLj308izMtOTC9D4DkHA8-b3kfTYoVaJO3FlnWz8hJV_g9tVDTlkn9gW_qNFsedV6Y_Y4u9pbG4BgWZB7l3Loy212HvsgjQaH6vvZBNfHn0bQJIVNMiwO52XdSXxfk6J_ouCEXq6zx0ek0Q-XXiBnW8RsVnZverI0pmKXwOrjQFx3s-4lCDlgBuMiLWmC_mZiDGtv7ZeoF0Z_m");'></div>
+<div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-xl">expand_less</span>
+</div>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<a class="text-white font-medium text-sm hover:underline truncate cursor-pointer" href="#">霓虹夜色</a>
+<a class="text-text-subdued text-xs hover:text-white hover:underline truncate cursor-pointer" href="#">合成器乐队</a>
+</div>
+<button class="text-primary hover:scale-110 transition-transform ml-2">
+<span class="material-symbols-outlined text-[20px] fill-1">favorite</span>
+</button>
+</div>
+<div class="flex flex-col items-center max-w-[40%] w-full gap-1">
+<div class="flex items-center gap-5 mb-1">
+<button class="text-text-subdued hover:text-white transition-colors" title="随机播放">
+<span class="material-symbols-outlined text-[20px]">shuffle</span>
+</button>
+<button class="text-text-subdued hover:text-white transition-colors" title="上一首">
+<span class="material-symbols-outlined text-[28px]">skip_previous</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform" title="播放/暂停">
+<span class="material-symbols-outlined text-[24px] fill-1">play_arrow</span>
+</button>
+<button class="text-text-subdued hover:text-white transition-colors" title="下一首">
+<span class="material-symbols-outlined text-[28px]">skip_next</span>
+</button>
+<button class="text-text-subdued hover:text-white transition-colors" title="循环播放">
+<span class="material-symbols-outlined text-[20px]">repeat</span>
+</button>
+</div>
+<div class="w-full flex items-center gap-2 text-xs font-medium text-text-subdued font-mono">
+<span>1:45</span>
+<div class="group relative flex-1 h-1 bg-[#4d4d4d] rounded-full cursor-pointer">
+<div class="absolute top-0 left-0 h-full w-[50%] bg-white group-hover:bg-primary rounded-full"></div>
+<div class="absolute top-1/2 left-[50%] -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-md"></div>
+</div>
+<span>3:30</span>
+</div>
+</div>
+<div class="flex items-center justify-end gap-3 w-[30%]">
+<button class="text-text-subdued hover:text-white" title="歌词">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+<button class="text-text-subdued hover:text-white" title="队列">
+<span class="material-symbols-outlined text-[20px]">queue_music</span>
+</button>
+<button class="text-text-subdued hover:text-white" title="连接设备">
+<span class="material-symbols-outlined text-[20px]">speaker_group</span>
+</button>
+<div class="flex items-center gap-2 w-24 group">
+<button class="text-text-subdued hover:text-white">
+<span class="material-symbols-outlined text-[20px]">volume_up</span>
+</button>
+<div class="flex-1 h-1 bg-[#4d4d4d] rounded-full cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 h-full w-[70%] bg-white group-hover:bg-primary transition-colors"></div>
+</div>
+</div>
+<button class="text-text-subdued hover:text-white" title="全屏">
+<span class="material-symbols-outlined text-[20px]">open_in_full</span>
+</button>
+</div>
+</div>
+
+</body></html>
