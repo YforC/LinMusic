@@ -1,14 +1,14 @@
-<template>
+﻿<template>
   <div class="relative">
     <!-- Background Gradient -->
     <div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#2e5c46] to-background-base pointer-events-none opacity-60"></div>
 
     <!-- Header Content -->
-    <header class="relative px-8 pt-16 pb-6 flex flex-col md:flex-row gap-6 items-end z-10">
+    <header class="relative px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 pb-6 flex flex-col md:flex-row gap-4 sm:gap-6 items-start md:items-end z-10">
       <!-- Cover Art -->
       <div class="shrink-0 shadow-2xl shadow-black/50 group cursor-pointer relative">
         <div
-          class="size-48 md:size-60 bg-surface-highlight rounded-lg bg-cover bg-center shadow-lg transition-all duration-300 group-hover:scale-[1.02]"
+          class="size-32 sm:size-48 md:size-60 bg-surface-highlight rounded-lg bg-cover bg-center shadow-lg transition-all duration-300 group-hover:scale-[1.02]"
           :style="{ backgroundImage: playlist?.coverUrl ? `url(${playlist.coverUrl})` : 'none' }"
         >
           <div v-if="!playlist?.coverUrl" class="w-full h-full flex items-center justify-center">
@@ -20,17 +20,17 @@
       <!-- Info -->
       <div class="flex flex-col gap-2 w-full">
         <span class="text-xs font-bold uppercase tracking-wide text-white/90">歌单</span>
-        <h1 class="text-4xl md:text-6xl font-black text-white tracking-tight py-2">{{ playlist?.name || '加载中...' }}</h1>
+        <h1 class="text-3xl sm:text-4xl md:text-6xl font-black text-white tracking-tight py-2">{{ playlist?.name || '加载中...' }}</h1>
         <p class="text-gray-300 text-sm md:text-base font-medium mt-2">
-          {{ playlist?.description || '' }} • LinMusic • {{ songs.length }}首歌曲
+          {{ playlist?.description || '' }} - LinMusic - {{ songs.length }}首歌曲
         </p>
       </div>
     </header>
 
     <!-- Actions Bar -->
-    <div class="relative px-8 py-6 z-30 flex items-center gap-6">
+    <div class="relative px-4 sm:px-6 md:px-8 py-4 sm:py-6 z-30 flex items-center gap-4 sm:gap-6">
       <button
-        class="size-14 bg-primary hover:scale-105 hover:bg-primary/90 transition-all rounded-full flex items-center justify-center text-black shadow-lg shadow-primary/20"
+        class="size-12 sm:size-14 bg-primary hover:scale-105 hover:bg-primary/90 transition-all rounded-full flex items-center justify-center text-black shadow-lg shadow-primary/20"
         :disabled="songs.length === 0"
         @click="playAll"
       >
@@ -70,15 +70,15 @@
     </div>
 
     <!-- Songs List Table -->
-    <div class="relative z-10 px-8 pb-32">
+    <div class="relative z-10 px-4 sm:px-6 md:px-8 pb-32">
       <div class="w-full">
         <!-- Table Header -->
-        <div class="grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-2 border-b border-white/10 text-text-subdued text-sm font-medium uppercase tracking-wider sticky top-0 bg-background-base/95 backdrop-blur-sm z-20">
+        <div class="grid grid-cols-[auto_4fr_auto] sm:grid-cols-[auto_4fr_3fr_auto] md:grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-3 sm:px-4 py-2 border-b border-white/10 text-text-subdued text-sm font-medium uppercase tracking-wider sticky top-0 bg-background-base/95 backdrop-blur-sm z-20">
           <div class="w-8 text-center">#</div>
           <div>标题</div>
           <div class="hidden md:block">专辑</div>
           <div class="hidden sm:block">歌手</div>
-          <div class="w-32 text-right">
+          <div class="w-20 sm:w-28 md:w-32 text-right">
             <span class="material-symbols-outlined text-lg">schedule</span>
           </div>
         </div>
@@ -88,7 +88,7 @@
           <div
             v-for="(song, index) in songs"
             :key="`${song.platform}-${song.id}`"
-            class="group grid grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-pointer"
+            class="group grid grid-cols-[auto_4fr_auto] sm:grid-cols-[auto_4fr_3fr_auto] md:grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-3 sm:px-4 py-3 hover:bg-white/10 rounded-md items-center transition-colors cursor-pointer"
             @click="playSong(song, index)"
           >
             <div class="w-8 text-center text-text-subdued relative flex items-center justify-center">
@@ -107,7 +107,7 @@
 
             <div class="hidden md:block text-text-subdued text-sm truncate">{{ song.album || '-' }}</div>
             <div class="hidden sm:block text-text-subdued text-sm truncate hover:text-white cursor-pointer hover:underline">{{ song.artist }}</div>
-            <div class="w-32 text-right text-text-subdued text-sm">
+            <div class="w-20 sm:w-28 md:w-32 text-right text-text-subdued text-sm">
               <div class="flex items-center justify-end gap-2">
                 <button
                   class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"

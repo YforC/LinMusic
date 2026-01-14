@@ -1,10 +1,10 @@
 <template>
-  <div class="fixed bottom-0 left-0 right-0 h-[90px] player-bar px-4 flex items-center justify-between z-50">
+  <div class="fixed bottom-0 left-0 right-0 player-bar px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between z-50 gap-3 sm:gap-0 py-3 sm:py-0 h-auto sm:h-[90px]">
     <!-- Left: Now Playing -->
-    <div class="flex items-center gap-4 w-[30%] min-w-0">
+    <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-[30%] min-w-0">
       <div
         v-if="currentSong"
-        class="album-cover relative group cursor-pointer w-14 h-14 rounded-md overflow-hidden flex-shrink-0"
+        class="album-cover relative group cursor-pointer w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0"
         @click="goToLyrics"
       >
         <img
@@ -36,7 +36,7 @@
 
       <button
         v-if="currentSong"
-        class="btn-icon ml-2 flex-shrink-0 transition-all duration-300"
+        class="btn-icon ml-auto sm:ml-2 flex-shrink-0 transition-all duration-300"
         :class="isLiked ? 'text-primary' : 'text-white/40 hover:text-primary'"
         @click="toggleLike"
       >
@@ -51,8 +51,8 @@
     </div>
 
     <!-- Center: Controls -->
-    <div class="flex flex-col items-center max-w-[40%] w-full gap-1">
-      <div class="flex items-center gap-5 mb-1">
+    <div class="flex flex-col items-center w-full sm:max-w-[40%] sm:w-full gap-1">
+      <div class="flex items-center gap-3 sm:gap-5 mb-1">
         <button
           class="btn-icon p-2 rounded-full transition-all duration-300"
           :class="playMode === 'shuffle' ? 'text-primary bg-primary/10' : 'text-white/50 hover:text-white hover:bg-white/5'"
@@ -112,8 +112,8 @@
       </div>
 
       <!-- Progress Bar -->
-      <div class="w-full flex items-center gap-2 text-[11px] font-medium text-white/50 tabular-nums">
-        <span class="w-10 text-right transition-colors duration-200" :class="{ 'text-white/70': isDraggingProgress }">{{ formattedCurrentTime }}</span>
+      <div class="w-full flex items-center gap-2 text-[10px] sm:text-[11px] font-medium text-white/50 tabular-nums">
+        <span class="w-9 sm:w-10 text-right transition-colors duration-200" :class="{ 'text-white/70': isDraggingProgress }">{{ formattedCurrentTime }}</span>
         <div
           ref="progressBarRef"
           class="progress-bar group relative flex-1"
@@ -127,12 +127,12 @@
             <div class="progress-bar-thumb"></div>
           </div>
         </div>
-        <span class="w-10 transition-colors duration-200" :class="{ 'text-white/70': isDraggingProgress }">{{ formattedDuration }}</span>
+        <span class="w-9 sm:w-10 transition-colors duration-200" :class="{ 'text-white/70': isDraggingProgress }">{{ formattedDuration }}</span>
       </div>
     </div>
 
     <!-- Right: Volume & Extras -->
-    <div class="flex items-center justify-end gap-2 w-[30%]">
+    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-[30%]">
       <button
         class="btn-icon p-2 rounded-full transition-all duration-300"
         :class="isQueueOpen ? 'text-primary bg-primary/10' : 'text-white/50 hover:text-white hover:bg-white/5'"
@@ -142,8 +142,19 @@
         <span class="material-symbols-outlined text-[20px]">queue_music</span>
       </button>
 
+      <button
+        class="btn-icon text-white/50 hover:text-white transition-all duration-300 sm:hidden"
+        @click="toggleMute"
+      >
+        <Transition name="volume-icon" mode="out-in">
+          <span :key="volumeIcon" class="material-symbols-outlined text-[20px]">
+            {{ volumeIcon }}
+          </span>
+        </Transition>
+      </button>
+
       <!-- Volume Control -->
-      <div class="flex items-center gap-2 w-28 group">
+      <div class="hidden sm:flex items-center gap-2 w-28 group">
         <button
           class="btn-icon text-white/50 hover:text-white transition-all duration-300"
           @click="toggleMute"

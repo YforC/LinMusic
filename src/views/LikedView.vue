@@ -1,30 +1,30 @@
-<template>
+﻿<template>
   <div class="relative">
     <!-- Hero Section -->
-    <div class="px-8 pb-6 pt-16 hero-gradient flex items-end gap-6 min-h-[240px]">
+    <div class="px-4 sm:px-6 md:px-8 pb-6 pt-12 sm:pt-16 hero-gradient flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6 min-h-[200px] sm:min-h-[240px]">
       <div
-        class="w-[180px] h-[180px] shadow-2xl shadow-black/50 rounded-md bg-gradient-to-br from-indigo-800 to-indigo-400 flex items-center justify-center"
+        class="w-[130px] h-[130px] sm:w-[180px] sm:h-[180px] shadow-2xl shadow-black/50 rounded-md bg-gradient-to-br from-indigo-800 to-indigo-400 flex items-center justify-center"
       >
         <span class="material-symbols-outlined text-white text-[80px] fill-1">favorite</span>
       </div>
 
       <div class="flex flex-col gap-2">
         <span class="text-sm font-bold uppercase tracking-wider">歌单</span>
-        <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white mb-2">我喜欢的音乐</h1>
-        <div class="flex items-center gap-2 text-sm font-medium text-white/80">
+        <h1 class="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-white mb-2">我喜欢的音乐</h1>
+        <div class="flex flex-wrap items-center gap-2 text-sm font-medium text-white/80">
           <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs">L</div>
           <span class="hover:underline cursor-pointer">LinMusic</span>
-          <span>•</span>
+          <span>-</span>
           <span>{{ songs.length }} 首歌曲</span>
         </div>
       </div>
     </div>
 
     <!-- Action Bar -->
-    <div class="px-8 py-6 flex items-center justify-between bg-background-base/30 backdrop-blur-sm sticky top-0 z-10">
-      <div class="flex items-center gap-6">
+    <div class="px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex items-center justify-between bg-background-base/30 backdrop-blur-sm sticky top-0 z-10">
+      <div class="flex items-center gap-4 sm:gap-6">
         <button
-          class="w-14 h-14 rounded-full bg-primary hover:scale-105 hover:bg-primary/90 transition-all flex items-center justify-center shadow-lg shadow-black/40"
+          class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:scale-105 hover:bg-primary/90 transition-all flex items-center justify-center shadow-lg shadow-black/40"
           @click="playAll"
         >
           <span class="material-symbols-outlined text-3xl text-black fill-1 ml-1">play_arrow</span>
@@ -42,13 +42,13 @@
     </div>
 
     <!-- Songs List -->
-    <div class="px-8 pb-8">
+    <div class="px-4 sm:px-6 md:px-8 pb-8">
       <table class="w-full text-left border-collapse">
         <thead class="text-text-subdued text-sm border-b border-white/10 sticky top-[88px] bg-background-base z-10">
           <tr>
             <th class="font-normal py-2 px-3 w-12">#</th>
             <th class="font-normal py-2 px-3 w-[35%]">歌曲标题</th>
-            <th class="font-normal py-2 px-3 w-[25%]">歌手</th>
+            <th class="font-normal py-2 px-3 w-[25%] hidden sm:table-cell">歌手</th>
             <th class="font-normal py-2 px-3 w-[25%] hidden md:table-cell">专辑</th>
             <th class="font-normal py-2 px-3 w-16 text-right">
               <span class="material-symbols-outlined text-lg align-middle">schedule</span>
@@ -85,7 +85,7 @@
               </div>
             </td>
 
-            <td class="py-3 px-3 text-text-subdued group-hover:text-white truncate">{{ song.artist }}</td>
+            <td class="py-3 px-3 text-text-subdued group-hover:text-white truncate hidden sm:table-cell">{{ song.artist }}</td>
             <td class="py-3 px-3 text-text-subdued group-hover:text-white hidden md:table-cell truncate">{{ song.album || '-' }}</td>
 
             <td class="py-3 px-3 text-text-subdued group-hover:text-white text-right">
@@ -208,3 +208,4 @@ onUnmounted(() => {
   window.removeEventListener('linmusic-liked-changed', handleLikedChanged)
 })
 </script>
+

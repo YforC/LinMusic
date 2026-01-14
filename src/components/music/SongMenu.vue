@@ -33,6 +33,7 @@
               <button
                 class="menu-item w-full px-4 py-3 flex items-center justify-between text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors"
                 ref="playlistMenuItemRef"
+                @click.stop="togglePlaylistSubmenu"
               >
                 <div class="flex items-center gap-3">
                   <span class="material-symbols-outlined text-[20px]">library_add</span>
@@ -182,6 +183,14 @@ const closePlaylistSubmenu = () => {
   submenuTimeout = setTimeout(() => {
     showPlaylistSubmenu.value = false
   }, 100)
+}
+
+const togglePlaylistSubmenu = () => {
+  if (submenuTimeout) {
+    clearTimeout(submenuTimeout)
+    submenuTimeout = null
+  }
+  showPlaylistSubmenu.value = !showPlaylistSubmenu.value
 }
 
 // Check if song is liked
