@@ -19,7 +19,7 @@
         <button
           v-if="!isMobile"
           class="btn-icon text-white/50 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-all duration-200 flex-shrink-0"
-          :title="sidebarCollapsed ? '灞曞紑渚ц竟鏍? : '鏀惰捣渚ц竟鏍?"
+          :title="sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'"
           @click="toggleCollapsed"
         >
           <span class="material-symbols-outlined text-[20px] transition-transform duration-300" :class="{ 'rotate-180': sidebarCollapsed }">
@@ -29,7 +29,7 @@
         <button
           v-else
           class="btn-icon text-white/50 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-all duration-200 flex-shrink-0"
-          title="Close"
+          title="关闭"
           @click="handleMobileClose"
         >
           <span class="material-symbols-outlined text-[20px]">close</span>
@@ -44,12 +44,12 @@
             isActive('/') ? 'text-white bg-white/10' : 'text-white/60 hover:text-white',
             sidebarCollapsed ? 'justify-center' : ''
           ]"
-          :title="sidebarCollapsed ? '棣栭〉' : ''"
+          :title="sidebarCollapsed ? '首页' : ''"
           @click="handleMobileClose"
         >
           <span class="material-symbols-outlined text-[24px]" :class="{ 'fill-1': isActive('/') }">home</span>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed">棣栭〉</span>
+            <span v-if="!sidebarCollapsed">首页</span>
           </Transition>
         </router-link>
 
@@ -60,12 +60,12 @@
             isActive('/search') ? 'text-white bg-white/10' : 'text-white/60 hover:text-white',
             sidebarCollapsed ? 'justify-center' : ''
           ]"
-          :title="sidebarCollapsed ? '鎼滅储' : ''"
+          :title="sidebarCollapsed ? '搜索' : ''"
           @click="handleMobileClose"
         >
           <span class="material-symbols-outlined text-[24px]" :class="{ 'fill-1': isActive('/search') }">search</span>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed">鎼滅储</span>
+            <span v-if="!sidebarCollapsed">搜索</span>
           </Transition>
         </router-link>
 
@@ -76,12 +76,12 @@
             isActive('/charts') ? 'text-white bg-white/10' : 'text-white/60 hover:text-white',
             sidebarCollapsed ? 'justify-center' : ''
           ]"
-          :title="sidebarCollapsed ? '鎺掕姒? : ''"
+          :title="sidebarCollapsed ? '排行榜' : ''"
           @click="handleMobileClose"
         >
           <span class="material-symbols-outlined text-[24px]" :class="{ 'fill-1': isActive('/charts') }">bar_chart</span>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed">鎺掕姒?</span>
+            <span v-if="!sidebarCollapsed">排行榜</span>
           </Transition>
         </router-link>
 
@@ -92,12 +92,12 @@
             isActive('/settings') ? 'text-white bg-white/10' : 'text-white/60 hover:text-white',
             sidebarCollapsed ? 'justify-center' : ''
           ]"
-          :title="sidebarCollapsed ? '璁剧疆' : ''"
+          :title="sidebarCollapsed ? '设置' : ''"
           @click="handleMobileClose"
         >
           <span class="material-symbols-outlined text-[24px]" :class="{ 'fill-1': isActive('/settings') }">settings</span>
           <Transition name="fade-slide">
-            <span v-if="!sidebarCollapsed">璁剧疆</span>
+            <span v-if="!sidebarCollapsed">设置</span>
           </Transition>
         </router-link>
       </nav>
@@ -113,14 +113,14 @@
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-[24px]">library_music</span>
             <Transition name="fade-slide">
-              <span v-if="!sidebarCollapsed" class="font-bold">闊充箰搴?</span>
+              <span v-if="!sidebarCollapsed" class="font-bold">音乐库</span>
             </Transition>
           </div>
           <Transition name="fade-slide">
             <button
               v-if="!sidebarCollapsed"
               class="btn-icon text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
-              title="鏂板缓姝屽崟"
+              title="新建歌单"
               @click="showCreatePlaylist = true"
             >
               <span class="material-symbols-outlined text-[20px]">add</span>
@@ -131,7 +131,7 @@
 
       <div class="flex-1 overflow-y-auto px-2 pb-2 no-scrollbar">
         <div class="flex flex-col gap-1 mt-2">
-          <!-- 鎴戝枩娆㈢殑闊充箰 -->
+          <!-- Liked songs -->
           <router-link
             to="/liked"
             class="sidebar-item flex items-center gap-3 p-2 cursor-pointer group"
@@ -139,7 +139,7 @@
               isActive('/liked') ? 'bg-white/10' : '',
               sidebarCollapsed ? 'justify-center' : ''
             ]"
-            :title="sidebarCollapsed ? '鎴戝枩娆㈢殑闊充箰' : ''"
+            :title="sidebarCollapsed ? '我喜欢的音乐' : ''"
             @click="handleMobileClose"
           >
             <div class="w-10 h-10 rounded-md bg-gradient-to-br from-[#450af5] to-[#c4efd9] flex items-center justify-center flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -147,13 +147,13 @@
             </div>
             <Transition name="fade-slide">
               <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0">
-                <span class="font-medium text-white text-sm truncate">鎴戝枩娆㈢殑闊充箰</span>
-                <span class="text-xs text-white/50">姝屽崟</span>
+                <span class="font-medium text-white text-sm truncate">我喜欢的音乐</span>
+                <span class="text-xs text-white/50">歌单</span>
               </div>
             </Transition>
           </router-link>
 
-          <!-- 鐢ㄦ埛姝屽崟鍒楄〃 -->
+          <!-- User playlists -->
           <div
             v-for="playlist in playlists"
             :key="playlist.id"
@@ -168,7 +168,7 @@
             <Transition name="fade-slide">
               <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0">
                 <span class="font-medium text-white text-sm truncate">{{ playlist.name }}</span>
-                <span class="text-xs text-white/50">{{ playlist.songCount || 0 }} 棣栨瓕鏇?</span>
+                <span class="text-xs text-white/50">{{ playlist.songCount || 0 }} 首歌曲</span>
               </div>
             </Transition>
           </div>
@@ -182,12 +182,12 @@
         <div v-if="showCreatePlaylist" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-black/70" @click="showCreatePlaylist = false"></div>
           <div class="relative bg-[#282828] rounded-lg p-6 w-full max-w-md shadow-2xl">
-            <h2 class="text-xl font-bold text-white mb-4">鏂板缓姝屽崟</h2>
+            <h2 class="text-xl font-bold text-white mb-4">新建歌单</h2>
             <input
               v-model="newPlaylistName"
               type="text"
               class="w-full h-12 px-4 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/40 transition-colors"
-              placeholder="姝屽崟鍚嶇О"
+              placeholder="歌单名称"
               @keyup.enter="createPlaylist"
             />
             <div class="flex justify-end gap-3 mt-6">
@@ -195,14 +195,14 @@
                 class="px-6 py-2 rounded-full text-white/70 hover:text-white font-medium transition-colors"
                 @click="showCreatePlaylist = false"
               >
-                鍙栨秷
+                取消
               </button>
               <button
                 class="px-6 py-2 rounded-full bg-primary text-black font-bold hover:bg-[#1ed760] transition-colors"
                 :disabled="!newPlaylistName.trim()"
                 @click="createPlaylist"
               >
-                鍒涘缓
+                创建
               </button>
             </div>
           </div>
@@ -235,14 +235,10 @@ const appStore = useAppStore()
 const { sidebarCollapsed } = storeToRefs(appStore)
 const isMobile = computed(() => props.mobile === true)
 
-// 鐢ㄦ埛姝屽崟
 const playlists = ref<Playlist[]>([])
-
-// 鏂板缓姝屽崟
 const showCreatePlaylist = ref(false)
 const newPlaylistName = ref('')
 
-// 鍒ゆ柇褰撳墠璺敱鏄惁婵€娲?
 const isActive = (path: string) => {
   if (path === '/') {
     return route.path === '/'
@@ -250,7 +246,6 @@ const isActive = (path: string) => {
   return route.path.startsWith(path)
 }
 
-// 鍒囨崲鏀惰捣鐘舵€?
 const toggleCollapsed = () => {
   appStore.toggleSidebarCollapsed()
 }
@@ -261,18 +256,15 @@ const handleMobileClose = () => {
   }
 }
 
-// 璺宠浆鍒版瓕鍗曡鎯?
 const goToPlaylist = (id: number) => {
   router.push(`/playlist/${id}`)
   handleMobileClose()
 }
 
-// 鍔犺浇姝屽崟鍒楄〃
 const loadPlaylists = async () => {
   playlists.value = await getPlaylists()
 }
 
-// 鍒涘缓姝屽崟
 const createPlaylist = async () => {
   if (!newPlaylistName.value.trim()) return
 
