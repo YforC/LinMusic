@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { getPlayUrl, type Platform, type AudioQuality } from '@/api/music'
+import { getPlayUrl, type AudioQuality } from '@/api/music'
 import type { Song } from '@/api/types'
 
 export function useDownload() {
@@ -63,7 +63,7 @@ export function useDownload() {
         throw new Error('No response body')
       }
 
-      const chunks: Uint8Array[] = []
+      const chunks: BlobPart[] = []
       let received = 0
 
       while (true) {
@@ -71,8 +71,10 @@ export function useDownload() {
 
         if (done) break
 
-        chunks.push(value)
-        received += value.length
+        if (!value) continue
+        const chunk = new Uint8Array(value)
+        chunks.push(chunk)
+        received += chunk.length
 
         if (total > 0) {
           downloadProgress.value = Math.round((received / total) * 100)

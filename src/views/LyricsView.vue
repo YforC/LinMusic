@@ -348,6 +348,8 @@ const startLeave = (next?: () => void) => {
 }
 
 onBeforeRouteLeave((to, from, next) => {
+  void to
+  void from
   startLeave(next)
 })
 

@@ -137,7 +137,7 @@ import { usePlayerStore } from '@/stores/player'
 import { getPlaylists, createPlaylist, addSongToPlaylist } from '@/api/playlist'
 import { likeSong, unlikeSong, checkLikedSongs } from '@/api/liked'
 import { globalToast } from '@/composables/useToast'
-import { getPlayUrl, type AudioQuality } from '@/api/music'
+import { getPlayUrl } from '@/api/music'
 import type { Song, Playlist } from '@/api/types'
 
 const props = defineProps<{

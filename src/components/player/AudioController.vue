@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted, onMounted } from 'vue'
+import { watch, onUnmounted, onMounted } from 'vue'
 import { Howl } from 'howler'
 import { usePlayerStore } from '@/stores/player'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl } from '@/api/music'
@@ -12,7 +12,7 @@ import { parseLrc } from '@/utils/lrc-parser'
 import { storeToRefs } from 'pinia'
 
 const playerStore = usePlayerStore()
-const { currentSong, isPlaying, volume, playMode, audioQuality, duration } = storeToRefs(playerStore)
+const { currentSong, isPlaying, volume, playMode, audioQuality } = storeToRefs(playerStore)
 
 let howl: Howl | null = null
 let animationId: number | null = null
@@ -102,11 +102,11 @@ async function playSong() {
         handleSongEnd()
       },
       onloaderror: (id, error) => {
-        console.error('Load error:', error)
+        console.error('Load error:', id, error)
         playerStore.isLoading = false
       },
       onplayerror: (id, error) => {
-        console.error('Play error:', error)
+        console.error('Play error:', id, error)
         howl?.once('unlock', () => {
           howl?.play()
         })

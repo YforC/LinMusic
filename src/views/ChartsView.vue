@@ -434,9 +434,13 @@ const selectToplist = async (toplist: TopList) => {
 
 // 播放歌曲
 const playSong = (song: Song, index: number) => {
+  const targetIndex = songs.value.findIndex(
+    (item) => item.id === song.id && item.platform === song.platform
+  )
+  const resolvedIndex = targetIndex >= 0 ? targetIndex : index
   playerStore.clearPlaylist()
   playerStore.addToPlaylist(songs.value)
-  playerStore.playAt(index)
+  playerStore.playAt(resolvedIndex)
 }
 
 // 添加到播放列表
