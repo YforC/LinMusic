@@ -22,6 +22,9 @@ function addLocalLikedSong(song: Song): boolean {
       songs.unshift(song)
       localStorage.setItem(LOCAL_LIKED_KEY, JSON.stringify(songs))
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('linmusic-liked-changed'))
+    }
     return true
   } catch {
     return false
@@ -33,6 +36,9 @@ function removeLocalLikedSong(platform: string, songId: string): boolean {
     const songs = getLocalLikedSongs()
     const filtered = songs.filter(s => !(s.id === songId && s.platform === platform))
     localStorage.setItem(LOCAL_LIKED_KEY, JSON.stringify(filtered))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('linmusic-liked-changed'))
+    }
     return true
   } catch {
     return false

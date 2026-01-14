@@ -112,8 +112,8 @@ export async function addSongToPlaylist(playlistId: number, song: Song): Promise
     const songToAdd: Song = {
       id: String(song.id),
       platform: song.platform,
-      name: song.name,
-      artist: song.artist,
+      name: song.name || '未知歌曲',
+      artist: song.artist || '未知歌手',
       album: song.album,
       duration: song.duration,
       coverUrl: song.coverUrl

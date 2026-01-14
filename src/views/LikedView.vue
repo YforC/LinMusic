@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, onActivated } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { getLikedSongs, unlikeSong as apiUnlikeSong } from '@/api/liked'
 import { formatDuration } from '@/utils/format'
@@ -191,7 +191,20 @@ const unlikeSong = async (song: Song) => {
   }
 }
 
+const handleLikedChanged = () => {
+  loadLikedSongs()
+}
+
 onMounted(() => {
   loadLikedSongs()
+  window.addEventListener('linmusic-liked-changed', handleLikedChanged)
+})
+
+onActivated(() => {
+  loadLikedSongs()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('linmusic-liked-changed', handleLikedChanged)
 })
 </script>
