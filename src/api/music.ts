@@ -1,5 +1,5 @@
 // TuneHub API 封装
-const BASE_URL = '/music-api/api'
+const BASE_URL = import.meta.env.DEV ? '/music-api/api' : 'https://music-dl.sayqz.com/api'
 
 export type Platform = 'netease' | 'kuwo' | 'qq'
 export type AudioQuality = '128k' | '320k' | 'flac' | 'flac24bit'
