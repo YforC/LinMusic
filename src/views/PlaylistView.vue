@@ -73,7 +73,7 @@
     <div class="relative z-10 px-4 sm:px-6 md:px-8 pb-32">
       <div class="w-full">
         <!-- Table Header -->
-        <div class="grid grid-cols-[auto_4fr_auto] sm:grid-cols-[auto_4fr_3fr_auto] md:grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-3 sm:px-4 py-2 border-b border-white/10 text-text-subdued text-sm font-medium uppercase tracking-wider sticky top-0 bg-background-base/95 backdrop-blur-sm z-20">
+        <div class="grid grid-cols-[auto_4fr_auto] sm:grid-cols-[auto_4fr_3fr_auto] md:grid-cols-[auto_4fr_3fr_3fr_auto] gap-4 px-3 sm:px-4 py-2 border-b border-white/10 text-text-subdued text-sm font-medium uppercase tracking-wider md:sticky md:top-0 bg-background-base/95 backdrop-blur-sm z-20">
           <div class="w-8 text-center">#</div>
           <div>标题</div>
           <div class="hidden md:block">专辑</div>
@@ -300,6 +300,7 @@ const handleDeletePlaylist = async () => {
     const success = await deletePlaylist(playlist.value.id)
     if (success) {
       globalToast.success('歌单已删除')
+      window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
       router.push('/')
     } else {
       globalToast.error('删除失败')
