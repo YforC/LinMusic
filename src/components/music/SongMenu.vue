@@ -361,6 +361,7 @@ const addToPlaylist = async (playlistId: number, playlistName?: string) => {
       globalToast.success('已添加到歌单')
     }
     emit('action', 'playlist')
+    window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
   } else {
     globalToast.error('添加失败')
   }
@@ -389,11 +390,13 @@ const handleCreatePlaylist = async () => {
 
   const newPlaylist = await createPlaylist(newPlaylistName.value)
   if (newPlaylist) {
+    playlists.value.unshift(newPlaylist)
     const success = await addSongToPlaylist(newPlaylist.id, props.song)
     if (success) {
       saveLastPlaylist(newPlaylist)
       globalToast.success(`已创建并添加到歌单：${newPlaylist.name}`)
       emit('action', 'playlist')
+      window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
     }
   }
 

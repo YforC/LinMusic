@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getPlaylists, createPlaylist as apiCreatePlaylist } from '@/api/playlist'
@@ -271,14 +271,24 @@ const createPlaylist = async () => {
   const newPlaylist = await apiCreatePlaylist(newPlaylistName.value)
   if (newPlaylist) {
     playlists.value.push(newPlaylist)
+    window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
   }
 
   newPlaylistName.value = ''
   showCreatePlaylist.value = false
 }
 
+const handlePlaylistsChanged = () => {
+  loadPlaylists()
+}
+
 onMounted(() => {
   loadPlaylists()
+  window.addEventListener('linmusic-playlists-changed', handlePlaylistsChanged)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('linmusic-playlists-changed', handlePlaylistsChanged)
 })
 </script>
 
