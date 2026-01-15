@@ -26,7 +26,21 @@ export async function onRequest(context: RequestContext): Promise<Response> {
       // 获取所有歌单
       const { results } = await env.DB.prepare(`
         SELECT
-          p.*,
+          p.id,
+          p.name,
+          p.description,
+          COALESCE(
+            p.cover_url,
+            (
+              SELECT cover_url
+              FROM playlist_songs
+              WHERE playlist_id = p.id AND cover_url IS NOT NULL
+              ORDER BY added_at DESC, sort_order DESC
+              LIMIT 1
+            )
+          ) as cover_url,
+          p.created_at,
+          p.updated_at,
           COUNT(ps.id) as song_count
         FROM playlists p
         LEFT JOIN playlist_songs ps ON p.id = ps.playlist_id
