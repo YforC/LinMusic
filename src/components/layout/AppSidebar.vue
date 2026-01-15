@@ -223,7 +223,9 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { getPlaylists, createPlaylist as apiCreatePlaylist } from '@/api/playlist'
+import { getPlaylists, getPlaylist, createPlaylist as apiCreatePlaylist } from '@/api/playlist'
+import { getCoverUrl } from '@/api/music'
+import { normalizeImageUrl } from '@/utils/format'
 import { storeToRefs } from 'pinia'
 import type { Playlist } from '@/api/types'
 
@@ -270,6 +272,26 @@ const goToPlaylist = (id: number) => {
 
 const loadPlaylists = async () => {
   playlists.value = await getPlaylists()
+  await hydratePlaylistCovers()
+}
+
+const hydratePlaylistCovers = async () => {
+  const targets = playlists.value.filter((playlist) => !playlist.coverUrl && (playlist.songCount || 0) > 0)
+  for (const playlist of targets) {
+    try {
+      const data = await getPlaylist(playlist.id)
+      const songs = data?.songs || []
+      if (songs.length === 0) continue
+      const last = songs[songs.length - 1]
+      const cover = normalizeImageUrl(last.coverUrl)
+        || normalizeImageUrl(getCoverUrl(String(last.id), last.platform))
+      if (cover) {
+        playlist.coverUrl = cover
+      }
+    } catch (error) {
+      console.error('Failed to hydrate playlist cover:', error)
+    }
+  }
 }
 
 const createPlaylist = async () => {

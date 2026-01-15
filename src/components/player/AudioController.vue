@@ -20,6 +20,7 @@ let animationId: number | null = null
 let lastPositionUpdate = 0
 
 Howler.autoSuspend = false
+Howler.autoUnlock = true
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -47,6 +48,35 @@ const updateMediaSessionPosition = () => {
   })
 }
 
+const resumeAudioContext = async () => {
+  if (!Howler.ctx || Howler.ctx.state !== 'suspended') return
+  try {
+    await Howler.ctx.resume()
+  } catch (error) {
+    console.warn('Audio context resume failed:', error)
+  }
+}
+
+const resumePlaybackFromGesture = () => {
+  if (!currentSong.value || !playerStore.isPlaying) return
+  void resumeAudioContext()
+  if (!howl) {
+    if (!playerStore.isLoading) {
+      playSong()
+    }
+    return
+  }
+  if (!howl.playing()) {
+    howl.play()
+  }
+}
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    resumePlaybackFromGesture()
+  }
+}
+
 // 跳转到指定时间
 function seek(time: number) {
   if (howl) {
@@ -57,6 +87,9 @@ function seek(time: number) {
 // 注册 seek 处理器
 onMounted(() => {
   playerStore.setSeekHandler(seek)
+  document.addEventListener('touchend', resumePlaybackFromGesture, { passive: true })
+  document.addEventListener('click', resumePlaybackFromGesture)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', () => {
       if (!playerStore.isPlaying) playerStore.togglePlay()
@@ -98,6 +131,8 @@ async function playSong() {
 
   playerStore.isLoading = true
   playerStore.currentTime = 0
+
+  void resumeAudioContext()
 
   try {
     updateMediaSessionMetadata(song)
@@ -247,6 +282,7 @@ watch(isPlaying, (playing) => {
   if (!howl) return
 
   if (playing) {
+    void resumeAudioContext()
     if (!howl.playing()) {
       howl.play()
     }
@@ -258,7 +294,7 @@ watch(isPlaying, (playing) => {
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
   }
-})
+}, { flush: 'sync' })
 
 // 监听音量变化
 watch(volume, (newVolume) => {
@@ -270,10 +306,13 @@ watch(currentSong, (newSong, oldSong) => {
   if (newSong && (!oldSong || newSong.id !== oldSong.id || newSong.platform !== oldSong.platform)) {
     playSong()
   }
-})
+}, { flush: 'sync' })
 
 // 清理
 onUnmounted(() => {
+  document.removeEventListener('touchend', resumePlaybackFromGesture)
+  document.removeEventListener('click', resumePlaybackFromGesture)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   if (howl) {
     howl.unload()
     howl = null
