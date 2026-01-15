@@ -100,17 +100,21 @@ async function playSong() {
   playerStore.currentTime = 0
 
   try {
-    // 获取歌曲详细信息
-    const info = await getSongInfo(song.id, song.platform)
-    if (info) {
-      if (!song.coverUrl) {
-        song.coverUrl = info.pic || getCoverUrl(song.id, song.platform)
-      }
-      if (!song.album) {
-        song.album = info.album
-      }
-    }
     updateMediaSessionMetadata(song)
+    void getSongInfo(song.id, song.platform)
+      .then((info) => {
+        if (!info) return
+        if (!song.coverUrl) {
+          song.coverUrl = info.pic || getCoverUrl(song.id, song.platform)
+        }
+        if (!song.album) {
+          song.album = info.album
+        }
+        updateMediaSessionMetadata(song)
+      })
+      .catch((error) => {
+        console.error('Get song info failed:', error)
+      })
 
     // 获取播放链接
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)

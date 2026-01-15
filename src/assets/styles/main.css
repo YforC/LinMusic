@@ -51,10 +51,19 @@
 }
 
 /* Base styles */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
 html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+html {
+  background-color: #000000;
 }
 
 body {
@@ -65,6 +74,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  touch-action: manipulation;
+}
+
+#app {
+  min-height: 100vh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
 }
 
 /* Selection */

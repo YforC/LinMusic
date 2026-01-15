@@ -81,8 +81,19 @@ export async function onRequest(context: RequestContext): Promise<Response> {
 
     // 更新歌单的更新时间
     await env.DB.prepare(`
-      UPDATE playlists SET updated_at = CURRENT_TIMESTAMP WHERE id = ?
-    `).bind(body.playlistId).run()
+      UPDATE playlists
+      SET updated_at = CURRENT_TIMESTAMP,
+          cover_url = CASE
+            WHEN ? IS NOT NULL AND ? != '' THEN ?
+            ELSE cover_url
+          END
+      WHERE id = ?
+    `).bind(
+      body.coverUrl || null,
+      body.coverUrl || null,
+      body.coverUrl || null,
+      body.playlistId
+    ).run()
 
     return successResponse({
       id: result.meta.last_row_id,

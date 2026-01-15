@@ -162,8 +162,15 @@
             :title="sidebarCollapsed ? playlist.name : ''"
             @click="goToPlaylist(playlist.id)"
           >
-            <div class="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center flex-shrink-0">
-              <span class="material-symbols-outlined text-white/50">music_note</span>
+            <div class="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <img
+                v-if="playlist.coverUrl"
+                :src="playlist.coverUrl"
+                :alt="playlist.name"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <span v-else class="material-symbols-outlined text-white/50">music_note</span>
             </div>
             <Transition name="fade-slide">
               <div v-if="!sidebarCollapsed" class="flex flex-col min-w-0">
