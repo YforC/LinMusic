@@ -17,7 +17,7 @@
         >
           <div
             ref="menuPanelRef"
-            class="bg-[#282828] rounded-lg shadow-2xl py-1 min-w-[200px] border border-white/10 overflow-hidden"
+            class="bg-[#282828] rounded-lg shadow-2xl py-1 min-w-[200px] border border-white/10"
             @click.stop
           >
             <!-- Add to Queue -->
@@ -46,7 +46,7 @@
               <!-- Playlist Submenu -->
               <div
                 v-if="showPlaylistSubmenu"
-                class="absolute right-0 top-full mt-1 bg-[#282828] rounded-lg shadow-2xl py-1 w-[180px] border border-white/10 z-[250] sm:left-full sm:right-auto sm:top-0 sm:mt-0 sm:ml-1"
+                class="mt-1 bg-[#282828] rounded-lg shadow-2xl py-1 w-full border border-white/10 z-[250] sm:absolute sm:left-full sm:top-0 sm:mt-0 sm:ml-1 sm:w-[180px]"
               >
                 <button
                   class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors border-b border-white/10"
