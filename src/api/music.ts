@@ -50,7 +50,8 @@ export interface PlaylistSong {
   types?: string[]
 }
 
-// 搜索歌曲（单平台�?export async function searchSongs(
+// 搜索歌曲（单平台�?
+export async function searchSongs(
   keyword: string,
   platform: Platform = 'netease',
   limit: number = 20
@@ -77,7 +78,8 @@ export interface PlaylistSong {
   }
 }
 
-// 聚合搜索（多平台�?export async function aggregateSearch(keyword: string): Promise<SearchResult[]> {
+// 聚合搜索（多平台�?
+export async function aggregateSearch(keyword: string): Promise<SearchResult[]> {
   try {
     const url = `${BASE_URL}/?type=aggregateSearch&keyword=${encodeURIComponent(keyword)}`
     const response = await fetch(url)
@@ -144,7 +146,8 @@ export async function getLyrics(id: string, platform: Platform): Promise<string>
   }
 }
 
-// 获取排行榜列�?export async function getTopLists(platform: Platform): Promise<TopList[]> {
+// 获取排行榜列�?
+export async function getTopLists(platform: Platform): Promise<TopList[]> {
   try {
     const url = `${BASE_URL}/?source=${platform}&type=toplists`
     const response = await fetch(url)
@@ -160,7 +163,8 @@ export async function getLyrics(id: string, platform: Platform): Promise<string>
   }
 }
 
-// 获取排行榜歌�?export async function getTopListSongs(id: string, platform: Platform): Promise<PlaylistSong[]> {
+// 获取排行榜歌�?
+export async function getTopListSongs(id: string, platform: Platform): Promise<PlaylistSong[]> {
   try {
     const url = `${BASE_URL}/?source=${platform}&id=${id}&type=toplist`
     const response = await fetch(url)

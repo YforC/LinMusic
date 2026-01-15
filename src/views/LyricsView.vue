@@ -315,7 +315,8 @@ const volumeIcon = computed(() => {
   return 'volume_up'
 })
 
-// 检查喜欢状�?const checkLiked = async () => {
+// 检查喜欢状�?
+const checkLiked = async () => {
   if (!currentSong.value) {
     isLiked.value = false
     return
@@ -332,7 +333,8 @@ watch(currentSong, () => {
   checkLiked()
 }, { immediate: true })
 
-// 监听歌词索引变化，自动滚�?watch(currentLyricIndex, (index) => {
+// 监听歌词索引变化，自动滚�?
+watch(currentLyricIndex, (index) => {
   if (index >= 0 && lyricRefs.value[index]) {
     nextTick(() => {
       lyricRefs.value[index]?.scrollIntoView({
@@ -455,7 +457,8 @@ const toggleFullscreen = async () => {
   }
 }
 
-// 进度条拖�?const getClientX = (event: MouseEvent | TouchEvent) => {
+// 进度条拖�?
+const getClientX = (event: MouseEvent | TouchEvent) => {
   if ('touches' in event) {
     const touch = event.touches[0] || event.changedTouches[0]
     return touch ? touch.clientX : null

@@ -83,7 +83,7 @@
 
         <button
           class="btn-icon text-white/70 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all duration-300"
-          title="上一�?
+          title="Previous"
           @click="handlePrev"
         >
           <span class="material-symbols-outlined text-[28px]">skip_previous</span>
@@ -106,7 +106,7 @@
 
         <button
           class="btn-icon text-white/70 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all duration-300"
-          title="下一�?
+          title="Next"
           @click="handleNext"
         >
           <span class="material-symbols-outlined text-[28px]">skip_next</span>
@@ -226,20 +226,24 @@ const {
   formattedDuration
 } = storeToRefs(playerStore)
 
-// 是否已喜�?const isLiked = ref(false)
+// 是否已喜�?
+const isLiked = ref(false)
 
-// 之前的音量（用于静音切换�?const previousVolume = ref(0.7)
+// 之前的音量（用于静音切换�?
+const previousVolume = ref(0.7)
 
 // 播放队列是否打开
 const isQueueOpen = ref(false)
 
-// 拖动状�?const isDraggingProgress = ref(false)
+// 拖动状�?
+const isDraggingProgress = ref(false)
 const isDraggingVolume = ref(false)
 const dragProgress = ref(0)
 const progressBarRef = ref<HTMLElement | null>(null)
 const volumeBarRef = ref<HTMLElement | null>(null)
 
-// 显示的进度（拖动时显示拖动进度，否则显示实际进度�?const displayProgress = computed(() => {
+// 显示的进度（拖动时显示拖动进度，否则显示实际进度�?
+const displayProgress = computed(() => {
   return isDraggingProgress.value ? dragProgress.value : progress.value
 })
 
@@ -271,7 +275,8 @@ watch(currentSong, () => {
   checkCurrentSongLiked()
 }, { immediate: true })
 
-// 切换喜欢状�?const toggleLike = async () => {
+// 切换喜欢状�?
+const toggleLike = async () => {
   if (!currentSong.value) return
 
   if (isLiked.value) {
@@ -288,11 +293,13 @@ const handleTogglePlay = () => {
   playerStore.togglePlay()
 }
 
-// 上一�?const handlePrev = () => {
+// 上一�?
+const handlePrev = () => {
   playerStore.playPrev()
 }
 
-// 下一�?const handleNext = () => {
+// 下一�?
+const handleNext = () => {
   playerStore.playNext()
 }
 
@@ -323,7 +330,8 @@ const toggleMute = () => {
   }
 }
 
-// 进度条拖�?const getClientX = (event: MouseEvent | TouchEvent) => {
+// 进度条拖�?
+const getClientX = (event: MouseEvent | TouchEvent) => {
   if ('touches' in event) {
     const touch = event.touches[0] || event.changedTouches[0]
     return touch ? touch.clientX : null
