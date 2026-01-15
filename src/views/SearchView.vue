@@ -5,7 +5,7 @@
 
     <div class="relative z-10 h-full flex flex-col">
       <!-- Search Header -->
-      <div class="px-6 md:px-8 py-6 border-b border-white/10">
+      <div class="px-4 sm:px-6 md:px-8 py-5 sm:py-6 border-b border-white/10">
         <div class="flex flex-col gap-4">
           <!-- Search Input with Platform Selector -->
           <div class="flex items-center gap-3 w-full max-w-[600px]">
@@ -76,7 +76,7 @@
       </div>
 
     <!-- Content Area -->
-    <div class="flex-1 overflow-y-auto px-6 md:px-8 py-6">
+    <div class="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-5 sm:py-6">
       <!-- Search Results -->
       <div v-if="searchResults.length > 0" class="flex flex-col gap-5 pb-32">
         <div class="flex items-center justify-between">

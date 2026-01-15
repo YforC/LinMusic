@@ -2,7 +2,7 @@
   <aside
     class="flex flex-col h-full bg-sidebar-base gap-2 p-2 transition-all duration-300"
     :class="[
-      isMobile ? 'flex w-[280px] max-w-[85vw]' : 'hidden md:flex',
+      isMobile ? 'flex w-[280px] max-w-[85vw] rounded-2xl shadow-2xl' : 'hidden md:flex',
       isMobile ? '' : (sidebarCollapsed ? 'w-[72px]' : 'w-[280px]')
     ]"
   >

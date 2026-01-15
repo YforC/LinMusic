@@ -91,6 +91,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   // 播放/暂停切换
   function togglePlay() {
+    if (!currentSong.value) return
     isPlaying.value = !isPlaying.value
   }
 

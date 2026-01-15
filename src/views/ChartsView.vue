@@ -8,9 +8,9 @@
     ></div>
 
     <!-- Header -->
-    <div class="relative z-10 px-6 md:px-8 pt-8 pb-6 flex flex-col md:flex-row items-end gap-6">
+    <div class="relative z-10 px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6 flex flex-col md:flex-row items-end gap-5 sm:gap-6">
       <div
-        class="size-[192px] md:size-[232px] shrink-0 shadow-[0_8px_40px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-lg overflow-hidden bg-white/5"
+        class="size-[160px] sm:size-[192px] md:size-[232px] shrink-0 shadow-[0_8px_40px_rgba(0,0,0,0.5)] flex items-center justify-center rounded-lg overflow-hidden bg-white/5"
       >
         <img
           v-if="currentToplistCover && !isLoading"
@@ -28,7 +28,7 @@
 
       <div class="flex flex-col gap-2 w-full pb-2">
         <span class="text-xs font-bold uppercase tracking-wider mt-4 md:mt-0 hidden md:block text-white/60">排行榜</span>
-        <h1 v-if="currentToplist?.name" class="text-3xl md:text-[72px] lg:text-[86px] md:leading-none font-black tracking-tighter text-white mb-2 line-clamp-2">
+        <h1 v-if="currentToplist?.name" class="text-2xl sm:text-3xl md:text-[72px] lg:text-[86px] md:leading-none font-black tracking-tighter text-white mb-2 line-clamp-2">
           {{ currentToplist.name }}
         </h1>
         <div v-else class="h-16 md:h-24 bg-white/5 rounded-lg w-3/4 skeleton"></div>
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Actions Bar -->
-    <div class="relative z-10 px-6 md:px-8 py-6 bg-background-base/30 backdrop-blur-sm sticky -top-[1px] md:static">
+    <div class="relative z-10 px-4 sm:px-6 md:px-8 py-4 sm:py-6 bg-background-base/30 backdrop-blur-sm md:sticky md:top-0">
       <div class="flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4 md:gap-6">
           <button
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Toplist Selector -->
-    <div class="relative z-10 px-6 md:px-8 py-4 border-b border-white/10">
+    <div class="relative z-10 px-4 sm:px-6 md:px-8 py-4 border-b border-white/10">
       <div
         ref="toplistScrollRef"
         class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin"
@@ -104,7 +104,7 @@
     </div>
 
     <!-- Table Header -->
-    <div class="px-6 md:px-8 sticky top-0 bg-background-base z-20 border-b border-white/10 pb-2 pt-2 mb-2 shadow-sm">
+    <div class="px-4 sm:px-6 md:px-8 sticky top-0 bg-background-base z-20 border-b border-white/10 pb-2 pt-2 mb-2 shadow-sm">
       <div class="grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_minmax(60px,1fr)] gap-4 text-sm font-normal text-white/50 items-center px-4">
         <div class="text-center text-base">#</div>
         <div class="text-xs font-medium uppercase tracking-wider">标题</div>
@@ -116,7 +116,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="px-6 md:px-8 pb-32 flex flex-col gap-1">
+    <div v-if="isLoading" class="px-4 sm:px-6 md:px-8 pb-32 flex flex-col gap-1">
       <div
         v-for="i in 10"
         :key="i"
@@ -142,7 +142,7 @@
     </div>
 
     <!-- Songs List -->
-    <div v-else class="px-6 md:px-8 pb-32 flex flex-col gap-1">
+    <div v-else class="px-4 sm:px-6 md:px-8 pb-32 flex flex-col gap-1">
       <div
         v-for="(song, index) in songs"
         :key="`${song.platform}-${song.id}`"

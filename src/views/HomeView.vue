@@ -4,7 +4,7 @@
     <div class="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#16213e] to-background-base pointer-events-none"></div>
 
     <!-- Content -->
-    <div class="relative z-10 px-6 pb-8 pt-6 flex flex-col gap-8">
+    <div class="relative z-10 px-4 sm:px-6 pb-6 sm:pb-8 pt-4 sm:pt-6 flex flex-col gap-8">
       <!-- 精选歌单 Section -->
       <section class="animate-fade-in">
         <div class="flex items-center justify-between mb-4">

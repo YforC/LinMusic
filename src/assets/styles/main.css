@@ -487,6 +487,18 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+@media (max-width: 640px) {
+  .player-bar {
+    border-radius: 16px;
+    margin: 0 8px 8px;
+  }
+
+  .song-row,
+  .sidebar-item {
+    border-radius: 12px;
+  }
+}
+
 /* ============================================
    Volume slider - Premium
    ============================================ */

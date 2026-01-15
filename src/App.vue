@@ -5,7 +5,7 @@
         <AppSidebar />
       </div>
 
-      <main class="flex-1 overflow-y-auto bg-background-base relative rounded-none md:rounded-lg md:mt-2 md:mr-2 md:mb-2 overflow-x-hidden spotify-gradient">
+      <main class="flex-1 overflow-y-auto bg-background-base relative rounded-2xl md:rounded-lg mt-2 mx-2 md:mt-2 md:mr-2 md:mb-2 md:ml-0 overflow-x-hidden spotify-gradient">
         <div
           v-if="!isLyricsPage"
           class="md:hidden sticky top-0 z-20 flex items-center gap-3 px-3 py-3 bg-background-base/90 backdrop-blur border-b border-white/10"
@@ -17,7 +17,7 @@
           >
             <span class="material-symbols-outlined text-[22px]">menu</span>
           </button>
-          <span class="text-sm text-white/70 tracking-wide">LInMusic</span>
+          <span class="text-base font-semibold text-white tracking-wide">LinMusic</span>
         </div>
         <router-view v-slot="{ Component }">
           <keep-alive include="ChartsView,HomeView,SearchView,LikedView,PlaylistView,SettingsView">
@@ -27,7 +27,7 @@
       </main>
     </div>
 
-    <div v-show="!isLyricsPage">
+    <div v-show="!isLyricsPage && hasCurrentSong">
       <PlayerBar />
     </div>
 
@@ -48,11 +48,14 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PlayerBar from '@/components/layout/PlayerBar.vue'
 import AudioController from '@/components/player/AudioController.vue'
 import ToastContainer from '@/components/common/ToastContainer.vue'
+import { usePlayerStore } from '@/stores/player'
 
 const route = useRoute()
+const playerStore = usePlayerStore()
 
 const isLyricsPage = computed(() => route.path === '/lyrics')
 const isMobileNavOpen = ref(false)
+const hasCurrentSong = computed(() => !!playerStore.currentSong)
 
 watch(
   () => route.path,

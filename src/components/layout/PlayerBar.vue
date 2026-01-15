@@ -1,10 +1,10 @@
 <template>
-  <div class="fixed bottom-0 left-0 right-0 player-bar px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between z-50 gap-3 sm:gap-0 py-3 sm:py-0 h-auto sm:h-[90px]">
+  <div class="fixed bottom-0 left-0 right-0 player-bar px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between z-50 gap-2 sm:gap-0 py-2 sm:py-0 h-auto sm:h-[90px]">
     <!-- Left: Now Playing -->
     <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-[30%] min-w-0">
       <div
         v-if="currentSong"
-        class="album-cover relative group cursor-pointer w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0"
+        class="album-cover relative group cursor-pointer w-10 h-10 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0"
         @click="goToLyrics"
       >
         <img
@@ -34,25 +34,44 @@
         <span class="text-white/40 text-sm">未播放</span>
       </div>
 
-      <button
-        v-if="currentSong"
-        class="btn-icon ml-auto sm:ml-2 flex-shrink-0 transition-all duration-300"
-        :class="isLiked ? 'text-primary' : 'text-white/40 hover:text-primary'"
-        @click="toggleLike"
-      >
-        <span
-          class="material-symbols-outlined text-[20px] transition-all duration-300"
-          :class="[
-            { 'fill-1': isLiked },
-            isLiked ? 'scale-110' : 'scale-100 hover:scale-110'
-          ]"
-        >favorite</span>
-      </button>
+      <div v-if="currentSong" class="ml-auto flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <button
+          class="btn-icon transition-all duration-300"
+          :class="isLiked ? 'text-primary' : 'text-white/40 hover:text-primary'"
+          @click="toggleLike"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] transition-all duration-300"
+            :class="[
+              { 'fill-1': isLiked },
+              isLiked ? 'scale-110' : 'scale-100 hover:scale-110'
+            ]"
+          >favorite</span>
+        </button>
+        <button
+          class="btn-icon p-2 rounded-full transition-all duration-300 sm:hidden"
+          :class="isQueueOpen ? 'text-primary bg-primary/10' : 'text-white/50 hover:text-white hover:bg-white/5'"
+          title="播放队列"
+          @click="toggleQueue"
+        >
+          <span class="material-symbols-outlined text-[20px]">queue_music</span>
+        </button>
+        <button
+          class="btn-icon text-white/50 hover:text-white transition-all duration-300 sm:hidden"
+          @click="toggleMute"
+        >
+          <Transition name="volume-icon" mode="out-in">
+            <span :key="volumeIcon" class="material-symbols-outlined text-[20px]">
+              {{ volumeIcon }}
+            </span>
+          </Transition>
+        </button>
+      </div>
     </div>
 
     <!-- Center: Controls -->
-    <div class="flex flex-col items-center w-full sm:max-w-[40%] sm:w-full gap-1">
-      <div class="flex items-center gap-3 sm:gap-5 mb-1">
+      <div class="flex flex-col items-center w-full sm:max-w-[40%] sm:w-full gap-1">
+      <div class="flex items-center gap-2 sm:gap-5 mb-1">
         <button
           class="btn-icon p-2 rounded-full transition-all duration-300"
           :class="playMode === 'shuffle' ? 'text-primary bg-primary/10' : 'text-white/50 hover:text-white hover:bg-white/5'"
@@ -71,7 +90,7 @@
         </button>
 
         <button
-          class="btn-play btn-play-large group"
+          class="btn-play w-12 h-12 sm:w-14 sm:h-14 group"
           title="播放/暂停"
           @click="handleTogglePlay"
         >
@@ -132,7 +151,7 @@
     </div>
 
     <!-- Right: Volume & Extras -->
-    <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-[30%]">
+    <div class="hidden sm:flex items-center justify-between sm:justify-end gap-2 w-full sm:w-[30%]">
       <button
         class="btn-icon p-2 rounded-full transition-all duration-300"
         :class="isQueueOpen ? 'text-primary bg-primary/10' : 'text-white/50 hover:text-white hover:bg-white/5'"
