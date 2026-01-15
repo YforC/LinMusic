@@ -17,7 +17,7 @@
         >
           <div
             ref="menuPanelRef"
-            class="bg-[#282828] rounded-lg shadow-2xl py-1 min-w-[200px] border border-white/10"
+            class="bg-[#242424]/95 rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.5)] py-1 min-w-[220px] border border-white/10 backdrop-blur-md"
             @click.stop
           >
             <!-- Add to Queue -->
@@ -27,6 +27,19 @@
             >
               <span class="material-symbols-outlined text-[20px]">playlist_add</span>
               <span class="text-sm font-medium">添加到播放列表</span>
+            </button>
+
+            <!-- Quick Add -->
+            <button
+              v-if="quickAddPlaylist"
+              class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+              @click="addToLastPlaylist"
+            >
+              <span class="material-symbols-outlined text-[20px]">history</span>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium">添加到上次歌单</span>
+                <span class="text-xs text-white/50 truncate">{{ quickAddPlaylist.name }}</span>
+              </div>
             </button>
 
             <!-- Add to Playlist -->
@@ -46,7 +59,8 @@
               <!-- Playlist Submenu -->
               <div
                 v-if="showPlaylistSubmenu"
-                class="mt-1 bg-[#282828] rounded-lg shadow-2xl py-1 w-full border border-white/10 z-[250] sm:absolute sm:left-full sm:top-0 sm:mt-0 sm:ml-1 sm:w-[180px]"
+                class="mt-1 bg-[#1f1f1f]/95 rounded-xl shadow-[0_12px_28px_rgba(0,0,0,0.45)] py-1 w-full border border-white/10 z-[250] sm:absolute sm:top-0 sm:mt-0 sm:w-[200px]"
+                :class="submenuAlign === 'left' ? 'sm:right-full sm:mr-2' : 'sm:left-full sm:ml-2'"
               >
                 <button
                   class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors border-b border-white/10"
@@ -60,7 +74,7 @@
                     v-for="playlist in playlists"
                     :key="playlist.id"
                     class="menu-item w-full px-4 py-2.5 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                    @click.stop="addToPlaylist(playlist.id)"
+                    @click.stop="addToPlaylist(playlist.id, playlist.name)"
                   >
                     <span class="material-symbols-outlined text-[18px] text-white/50">queue_music</span>
                     <span class="text-sm truncate">{{ playlist.name }}</span>
@@ -134,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { getPlaylists, createPlaylist, addSongToPlaylist } from '@/api/playlist'
 import { likeSong, unlikeSong, checkLikedSongs } from '@/api/liked'
@@ -166,14 +180,62 @@ const menuPosition = ref({ top: '0px', left: '0px' })
 let submenuTimeout: ReturnType<typeof setTimeout> | null = null
 const isCoarsePointer = ref(false)
 let coarsePointerQuery: MediaQueryList | null = null
+const submenuAlign = ref<'left' | 'right'>('right')
+const lastPlaylist = ref<Playlist | null>(null)
 const handlePointerChange = (event: MediaQueryListEvent) => {
   isCoarsePointer.value = event.matches
+}
+
+const quickAddPlaylist = computed(() => {
+  if (!lastPlaylist.value) return null
+  const match = playlists.value.find((playlist) => playlist.id === lastPlaylist.value?.id)
+  return match || null
+})
+
+const loadLastPlaylist = () => {
+  try {
+    const raw = localStorage.getItem('linmusic:last-playlist')
+    if (!raw) return
+    const parsed = JSON.parse(raw) as { id: number; name: string }
+    if (parsed?.id) {
+      lastPlaylist.value = { id: parsed.id, name: parsed.name }
+    }
+  } catch {
+    lastPlaylist.value = null
+  }
+}
+
+const saveLastPlaylist = (playlist: Playlist) => {
+  lastPlaylist.value = { id: playlist.id, name: playlist.name }
+  try {
+    localStorage.setItem('linmusic:last-playlist', JSON.stringify({
+      id: playlist.id,
+      name: playlist.name
+    }))
+  } catch {
+    // ignore
+  }
+}
+
+const syncLastPlaylist = () => {
+  if (!lastPlaylist.value) return
+  const match = playlists.value.find((playlist) => playlist.id === lastPlaylist.value?.id)
+  if (!match) {
+    lastPlaylist.value = null
+    try {
+      localStorage.removeItem('linmusic:last-playlist')
+    } catch {
+      // ignore
+    }
+  } else {
+    lastPlaylist.value = { id: match.id, name: match.name }
+  }
 }
 
 // Load playlists
 const loadPlaylists = async () => {
   playlists.value = await getPlaylists()
-  console.log('Loaded playlists:', playlists.value)
+  syncLastPlaylist()
 }
 
 // Open playlist submenu with delay
@@ -200,6 +262,15 @@ const togglePlaylistSubmenu = () => {
     submenuTimeout = null
   }
   showPlaylistSubmenu.value = !showPlaylistSubmenu.value
+  if (showPlaylistSubmenu.value) {
+    void nextTick(() => {
+      const rect = playlistMenuItemRef.value?.getBoundingClientRect()
+      if (!rect) return
+      const submenuWidth = 200
+      const padding = 12
+      submenuAlign.value = rect.right + submenuWidth + padding > window.innerWidth ? 'left' : 'right'
+    })
+  }
 }
 
 // Check if song is liked
@@ -257,7 +328,7 @@ const addToQueue = () => {
 }
 
 // Add to playlist
-const addToPlaylist = async (playlistId: number) => {
+const addToPlaylist = async (playlistId: number, playlistName?: string) => {
   if (!props.song.id) {
     globalToast.error('歌曲信息不完整，无法添加')
     closeMenu()
@@ -265,12 +336,32 @@ const addToPlaylist = async (playlistId: number) => {
   }
   const success = await addSongToPlaylist(playlistId, props.song)
   if (success) {
-    globalToast.success('已添加到歌单')
+    const match = playlists.value.find((playlist) => playlist.id === playlistId)
+    const displayName = match?.name || playlistName
+    if (match) {
+      saveLastPlaylist(match)
+    } else if (displayName) {
+      saveLastPlaylist({ id: playlistId, name: displayName })
+    }
+    if (displayName) {
+      globalToast.success(`已添加到歌单：${displayName}`)
+    } else {
+      globalToast.success('已添加到歌单')
+    }
     emit('action', 'playlist')
   } else {
     globalToast.error('添加失败')
   }
   closeMenu()
+}
+
+const addToLastPlaylist = async () => {
+  const playlist = quickAddPlaylist.value
+  if (!playlist) {
+    globalToast.error('暂无可用的上次歌单')
+    return
+  }
+  await addToPlaylist(playlist.id)
 }
 
 // Create new playlist
@@ -288,7 +379,8 @@ const handleCreatePlaylist = async () => {
   if (newPlaylist) {
     const success = await addSongToPlaylist(newPlaylist.id, props.song)
     if (success) {
-      globalToast.success('已创建歌单并添加歌曲')
+      saveLastPlaylist(newPlaylist)
+      globalToast.success(`已创建并添加到歌单：${newPlaylist.name}`)
       emit('action', 'playlist')
     }
   }
@@ -335,6 +427,7 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+  loadLastPlaylist()
   document.addEventListener('click', handleClickOutside)
   coarsePointerQuery = window.matchMedia('(pointer: coarse)')
   isCoarsePointer.value = coarsePointerQuery.matches
