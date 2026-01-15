@@ -34,6 +34,11 @@
     <AudioController />
     <ToastContainer />
 
+    <div v-if="showPwaLoader" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black">
+      <div class="size-14 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+      <span class="mt-4 text-xs font-semibold tracking-[0.3em] text-white/70 uppercase">Loading</span>
+    </div>
+
     <div v-if="isMobileNavOpen && !isLyricsPage" class="fixed inset-0 z-[200] md:hidden">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="isMobileNavOpen = false"></div>
       <AppSidebar mobile @close="isMobileNavOpen = false" />
@@ -42,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import PlayerBar from '@/components/layout/PlayerBar.vue'
@@ -56,6 +61,13 @@ const playerStore = usePlayerStore()
 const isLyricsPage = computed(() => route.path === '/lyrics')
 const isMobileNavOpen = ref(false)
 const hasCurrentSong = computed(() => !!playerStore.currentSong)
+const showPwaLoader = ref(false)
+
+const isStandalone = () => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(display-mode: standalone)')?.matches
+    || (window.navigator as any).standalone === true
+}
 
 watch(
   () => route.path,
@@ -63,4 +75,19 @@ watch(
     isMobileNavOpen.value = false
   }
 )
+
+onMounted(() => {
+  if (!isStandalone()) return
+  const startedAt = Date.now()
+  const minDuration = 900
+  showPwaLoader.value = true
+  const finish = () => {
+    const elapsed = Date.now() - startedAt
+    const remaining = Math.max(0, minDuration - elapsed)
+    window.setTimeout(() => {
+      showPwaLoader.value = false
+    }, remaining)
+  }
+  requestAnimationFrame(() => requestAnimationFrame(finish))
+})
 </script>
