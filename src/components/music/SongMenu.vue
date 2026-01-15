@@ -192,6 +192,23 @@ const quickAddPlaylist = computed(() => {
   return match || null
 })
 
+const updateSubmenuAlign = async () => {
+  await nextTick()
+  const rect = playlistMenuItemRef.value?.getBoundingClientRect()
+  if (!rect) return
+  const submenuWidth = 200
+  const padding = 12
+  const rightSpace = window.innerWidth - rect.right
+  const leftSpace = rect.left
+  if (rightSpace < submenuWidth + padding && leftSpace >= submenuWidth + padding) {
+    submenuAlign.value = 'left'
+  } else if (rightSpace >= submenuWidth + padding) {
+    submenuAlign.value = 'right'
+  } else {
+    submenuAlign.value = leftSpace > rightSpace ? 'left' : 'right'
+  }
+}
+
 const loadLastPlaylist = () => {
   try {
     const raw = localStorage.getItem('linmusic:last-playlist')
@@ -246,6 +263,7 @@ const openPlaylistSubmenu = () => {
     submenuTimeout = null
   }
   showPlaylistSubmenu.value = true
+  void updateSubmenuAlign()
 }
 
 // Close playlist submenu with delay
@@ -263,13 +281,7 @@ const togglePlaylistSubmenu = () => {
   }
   showPlaylistSubmenu.value = !showPlaylistSubmenu.value
   if (showPlaylistSubmenu.value) {
-    void nextTick(() => {
-      const rect = playlistMenuItemRef.value?.getBoundingClientRect()
-      if (!rect) return
-      const submenuWidth = 200
-      const padding = 12
-      submenuAlign.value = rect.right + submenuWidth + padding > window.innerWidth ? 'left' : 'right'
-    })
+    void updateSubmenuAlign()
   }
 }
 
