@@ -5,17 +5,47 @@
 
 <script setup lang="ts">
 import { watch, onUnmounted, onMounted } from 'vue'
-import { Howl } from 'howler'
+import { Howl, Howler } from 'howler'
 import { usePlayerStore } from '@/stores/player'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
 import { storeToRefs } from 'pinia'
+import type { Song } from '@/api/types'
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying, volume, playMode, audioQuality } = storeToRefs(playerStore)
 
 let howl: Howl | null = null
 let animationId: number | null = null
+let lastPositionUpdate = 0
+
+Howler.autoSuspend = false
+
+const updateMediaSessionMetadata = (song: Song) => {
+  if (!('mediaSession' in navigator)) return
+  const artwork = song.coverUrl
+    ? [{ src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
+    : []
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: song.name,
+    artist: song.artist,
+    album: song.album || '',
+    artwork
+  })
+}
+
+const updateMediaSessionPosition = () => {
+  if (!('mediaSession' in navigator)) return
+  if (!howl || typeof navigator.mediaSession.setPositionState !== 'function') return
+  const duration = howl.duration()
+  const position = howl.seek() as number
+  if (!Number.isFinite(duration) || duration === 0 || !Number.isFinite(position)) return
+  navigator.mediaSession.setPositionState({
+    duration,
+    playbackRate: howl.rate(),
+    position
+  })
+}
 
 // 跳转到指定时间
 function seek(time: number) {
@@ -27,6 +57,25 @@ function seek(time: number) {
 // 注册 seek 处理器
 onMounted(() => {
   playerStore.setSeekHandler(seek)
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (!playerStore.isPlaying) playerStore.togglePlay()
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (playerStore.isPlaying) playerStore.togglePlay()
+    })
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      playerStore.playPrev()
+    })
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      playerStore.playNext()
+    })
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (typeof details.seekTime === 'number') {
+        playerStore.seekTo(details.seekTime)
+      }
+    })
+  }
 })
 
 // 播放歌曲
@@ -61,6 +110,7 @@ async function playSong() {
         song.album = info.album
       }
     }
+    updateMediaSessionMetadata(song)
 
     // 获取播放链接
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
@@ -74,6 +124,7 @@ async function playSong() {
       onload: () => {
         playerStore.duration = howl?.duration() || 0
         playerStore.isLoading = false
+        updateMediaSessionPosition()
       },
       onplay: () => {
         playerStore.isPlaying = true
@@ -129,6 +180,11 @@ function updateProgress() {
   if (howl && playerStore.isPlaying) {
     playerStore.currentTime = howl.seek() as number
     playerStore.updateLyricIndex()
+    const now = Date.now()
+    if (now - lastPositionUpdate > 1000) {
+      updateMediaSessionPosition()
+      lastPositionUpdate = now
+    }
     animationId = requestAnimationFrame(updateProgress)
   }
 }
@@ -186,6 +242,9 @@ watch(isPlaying, (playing) => {
     if (howl.playing()) {
       howl.pause()
     }
+  }
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
   }
 })
 

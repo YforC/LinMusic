@@ -8,10 +8,10 @@
       <!-- Cover Art -->
       <div class="shrink-0 shadow-2xl shadow-black/50 group cursor-pointer relative">
         <div
-          class="size-32 sm:size-48 md:size-60 bg-surface-highlight rounded-lg bg-cover bg-center shadow-lg transition-all duration-300 group-hover:scale-[1.02]"
-          :style="{ backgroundImage: playlist?.coverUrl ? `url(${playlist.coverUrl})` : 'none' }"
-        >
-          <div v-if="!playlist?.coverUrl" class="w-full h-full flex items-center justify-center">
+        class="size-32 sm:size-48 md:size-60 bg-surface-highlight rounded-lg bg-cover bg-center shadow-lg transition-all duration-300 group-hover:scale-[1.02]"
+        :style="{ backgroundImage: displayCoverUrl ? `url(${displayCoverUrl})` : 'none' }"
+      >
+          <div v-if="!displayCoverUrl" class="w-full h-full flex items-center justify-center">
             <span class="material-symbols-outlined text-text-subdued text-6xl">music_note</span>
           </div>
         </div>
@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import { getPlaylist, updatePlaylist, deletePlaylist, removeSongFromPlaylist } from '@/api/playlist'
@@ -210,6 +210,15 @@ const showEditModal = ref(false)
 const editName = ref('')
 const editDescription = ref('')
 const menuRef = ref<HTMLElement | null>(null)
+
+const displayCoverUrl = computed(() => {
+  if (songs.value.length === 0) return playlist.value?.coverUrl
+  for (let i = songs.value.length - 1; i >= 0; i -= 1) {
+    const cover = songs.value[i].coverUrl
+    if (cover) return cover
+  }
+  return playlist.value?.coverUrl
+})
 
 // 判断是否是当前播放歌曲
 const isCurrentSong = (song: Song) => {
