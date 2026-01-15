@@ -26,8 +26,9 @@ Howler.autoUnlock = true
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
-  const artwork = song.coverUrl
-    ? [{ src: song.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
+  const artworkSrc = getCoverUrl(song.id, song.platform)
+  const artwork = artworkSrc
+    ? [{ src: artworkSrc, sizes: '512x512', type: 'image/jpeg' }]
     : []
   navigator.mediaSession.metadata = new MediaMetadata({
     title: song.name,
