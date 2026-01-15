@@ -18,6 +18,8 @@ const { currentSong, isPlaying, volume, playMode, audioQuality } = storeToRefs(p
 let howl: Howl | null = null
 let animationId: number | null = null
 let lastPositionUpdate = 0
+let audioNode: HTMLAudioElement | null = null
+let endHandled = false
 
 Howler.autoSuspend = false
 Howler.autoUnlock = true
@@ -46,6 +48,40 @@ const updateMediaSessionPosition = () => {
     playbackRate: howl.rate(),
     position
   })
+}
+
+const handleNativeTimeUpdate = () => {
+  if (!audioNode) return
+  const position = audioNode.currentTime
+  if (!Number.isFinite(position)) return
+  playerStore.currentTime = position
+  playerStore.updateLyricIndex()
+  const now = Date.now()
+  if (now - lastPositionUpdate > 1000) {
+    updateMediaSessionPosition()
+    lastPositionUpdate = now
+  }
+}
+
+const handleNativeEnded = () => {
+  handleTrackEnd()
+}
+
+const detachAudioNodeListeners = () => {
+  if (!audioNode) return
+  audioNode.removeEventListener('timeupdate', handleNativeTimeUpdate)
+  audioNode.removeEventListener('ended', handleNativeEnded)
+  audioNode = null
+}
+
+const bindAudioNodeListeners = () => {
+  detachAudioNodeListeners()
+  const node = (howl as any)?._sounds?.[0]?._node as HTMLAudioElement | undefined
+  if (!node) return
+  audioNode = node
+  audioNode.preload = 'metadata'
+  audioNode.addEventListener('timeupdate', handleNativeTimeUpdate)
+  audioNode.addEventListener('ended', handleNativeEnded)
 }
 
 const resumeAudioContext = async () => {
@@ -77,6 +113,57 @@ const handleVisibilityChange = () => {
   }
 }
 
+const getSeekBase = () => {
+  if (howl) {
+    const position = howl.seek() as number
+    if (Number.isFinite(position)) return position
+  }
+  return playerStore.currentTime
+}
+
+const setMediaSessionHandler = (
+  action: MediaSessionAction,
+  handler: MediaSessionActionHandler | null
+) => {
+  try {
+    navigator.mediaSession.setActionHandler(action, handler)
+  } catch (error) {
+    console.warn(`MediaSession action not supported: ${action}`, error)
+  }
+}
+
+const registerMediaSessionHandlers = () => {
+  if (!('mediaSession' in navigator)) return
+  setMediaSessionHandler('play', () => {
+    if (!playerStore.isPlaying) playerStore.togglePlay()
+  })
+  setMediaSessionHandler('pause', () => {
+    if (playerStore.isPlaying) playerStore.togglePlay()
+  })
+  setMediaSessionHandler('previoustrack', () => {
+    playerStore.playPrev()
+  })
+  setMediaSessionHandler('nexttrack', () => {
+    playerStore.playNext()
+  })
+  setMediaSessionHandler('seekto', (details) => {
+    if (typeof details.seekTime === 'number') {
+      playerStore.seekTo(details.seekTime)
+    }
+  })
+  setMediaSessionHandler('seekbackward', (details) => {
+    const offset = details.seekOffset ?? 10
+    playerStore.seekTo(getSeekBase() - offset)
+  })
+  setMediaSessionHandler('seekforward', (details) => {
+    const offset = details.seekOffset ?? 10
+    playerStore.seekTo(getSeekBase() + offset)
+  })
+  setMediaSessionHandler('stop', () => {
+    if (playerStore.isPlaying) playerStore.togglePlay()
+  })
+}
+
 // 跳转到指定时间
 function seek(time: number) {
   if (howl) {
@@ -90,32 +177,26 @@ onMounted(() => {
   document.addEventListener('touchend', resumePlaybackFromGesture, { passive: true })
   document.addEventListener('click', resumePlaybackFromGesture)
   document.addEventListener('visibilitychange', handleVisibilityChange)
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.setActionHandler('play', () => {
-      if (!playerStore.isPlaying) playerStore.togglePlay()
-    })
-    navigator.mediaSession.setActionHandler('pause', () => {
-      if (playerStore.isPlaying) playerStore.togglePlay()
-    })
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-      playerStore.playPrev()
-    })
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-      playerStore.playNext()
-    })
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (typeof details.seekTime === 'number') {
-        playerStore.seekTo(details.seekTime)
-      }
-    })
-  }
+  registerMediaSessionHandlers()
 })
+
+function handleTrackEnd() {
+  if (endHandled) return
+  endHandled = true
+  const advanced = handleSongEnd()
+  if (!advanced) {
+    playerStore.isPlaying = false
+  }
+}
 
 // 播放歌曲
 async function playSong() {
   if (!currentSong.value) return
 
   const song = currentSong.value
+  endHandled = false
+  detachAudioNodeListeners()
+  registerMediaSessionHandlers()
 
   // 停止当前播放并完全清理
   if (howl) {
@@ -164,8 +245,10 @@ async function playSong() {
         playerStore.duration = howl?.duration() || 0
         playerStore.isLoading = false
         updateMediaSessionPosition()
+        bindAudioNodeListeners()
       },
       onplay: () => {
+        bindAudioNodeListeners()
         playerStore.isPlaying = true
         updateProgress()
       },
@@ -188,10 +271,7 @@ async function playSong() {
           cancelAnimationFrame(animationId)
           animationId = null
         }
-        const advanced = handleSongEnd()
-        if (!advanced) {
-          playerStore.isPlaying = false
-        }
+        handleTrackEnd()
       },
       onloaderror: (id, error) => {
         console.error('Load error:', id, error)
@@ -313,6 +393,7 @@ onUnmounted(() => {
   document.removeEventListener('touchend', resumePlaybackFromGesture)
   document.removeEventListener('click', resumePlaybackFromGesture)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  detachAudioNodeListeners()
   if (howl) {
     howl.unload()
     howl = null
