@@ -31,7 +31,7 @@
 
         <div class="flex flex-col items-center gap-1">
           <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">正在播放</span>
-          <span class="text-base font-semibold text-white/90 max-w-[300px] truncate">{{ currentSong?.name || '未播放' }}</span>
+          <span class="text-base font-semibold text-white/90 max-w-[300px] truncate">{{ currentSong?.name || '未播�? }}</span>
         </div>
 
         <button
@@ -140,6 +140,7 @@
               <div
                 class="volume-slider h-1 w-20 flex-1 cursor-pointer"
                 @mousedown="startVolumeDrag"
+                @touchstart.prevent="startVolumeDrag"
               >
                 <div
                   class="volume-slider-fill"
@@ -203,6 +204,7 @@
               class="progress-bar relative group h-1.5 w-full"
               :class="{ 'is-dragging': isDraggingProgress }"
               @mousedown="startProgressDrag"
+              @touchstart.prevent="startProgressDrag"
             >
               <div
                 class="progress-bar-fill h-full"
@@ -238,6 +240,7 @@
               <div
                 class="volume-slider h-1 flex-1 cursor-pointer"
                 @mousedown="startVolumeDrag"
+                @touchstart.prevent="startVolumeDrag"
               >
                 <div
                   class="volume-slider-fill"
@@ -312,8 +315,7 @@ const volumeIcon = computed(() => {
   return 'volume_up'
 })
 
-// 检查喜欢状态
-const checkLiked = async () => {
+// 检查喜欢状�?const checkLiked = async () => {
   if (!currentSong.value) {
     isLiked.value = false
     return
@@ -330,8 +332,7 @@ watch(currentSong, () => {
   checkLiked()
 }, { immediate: true })
 
-// 监听歌词索引变化，自动滚动
-watch(currentLyricIndex, (index) => {
+// 监听歌词索引变化，自动滚�?watch(currentLyricIndex, (index) => {
   if (index >= 0 && lyricRefs.value[index]) {
     nextTick(() => {
       lyricRefs.value[index]?.scrollIntoView({
@@ -352,14 +353,20 @@ onMounted(() => {
     router.replace('/')
   }
   document.addEventListener('fullscreenchange', handleFullscreenChange)
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
+  document.addEventListener('mousemove', handlePointerMove)
+  document.addEventListener('mouseup', handlePointerUp)
+  document.addEventListener('touchmove', handlePointerMove, { passive: false })
+  document.addEventListener('touchend', handlePointerUp, { passive: false })
+  document.addEventListener('touchcancel', handlePointerUp, { passive: false })
 })
 
 onUnmounted(() => {
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
+  document.removeEventListener('mousemove', handlePointerMove)
+  document.removeEventListener('mouseup', handlePointerUp)
+  document.removeEventListener('touchmove', handlePointerMove)
+  document.removeEventListener('touchend', handlePointerUp)
+  document.removeEventListener('touchcancel', handlePointerUp)
   if (leaveTimer) {
     clearTimeout(leaveTimer)
   }
@@ -448,53 +455,69 @@ const toggleFullscreen = async () => {
   }
 }
 
-// 进度条拖动
-const startProgressDrag = (e: MouseEvent) => {
+// 进度条拖�?const getClientX = (event: MouseEvent | TouchEvent) => {
+  if ('touches' in event) {
+    const touch = event.touches[0] || event.changedTouches[0]
+    return touch ? touch.clientX : null
+  }
+  return event.clientX
+}
+
+const startProgressDrag = (e: MouseEvent | TouchEvent) => {
+  if ('preventDefault' in e) e.preventDefault()
   isDraggingProgress.value = true
   updateProgressFromEvent(e)
 }
 
-const updateProgressFromEvent = (e: MouseEvent) => {
+const updateProgressFromEvent = (e: MouseEvent | TouchEvent) => {
   if (!progressBarRef.value) return
+  const clientX = getClientX(e)
+  if (clientX === null) return
   const rect = progressBarRef.value.getBoundingClientRect()
-  const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
   dragProgress.value = percent * 100
 }
 
-// 音量条拖动
-const startVolumeDrag = (e: MouseEvent) => {
+const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
+  if ('preventDefault' in e) e.preventDefault()
   isDraggingVolume.value = true
   activeVolumeBar.value = e.currentTarget as HTMLElement
   updateVolumeFromEvent(e)
 }
 
-const updateVolumeFromEvent = (e: MouseEvent) => {
+const updateVolumeFromEvent = (e: MouseEvent | TouchEvent) => {
   const target = activeVolumeBar.value
   if (!target) return
+  const clientX = getClientX(e)
+  if (clientX === null) return
   const rect = target.getBoundingClientRect()
-  const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
   playerStore.setVolume(percent)
 }
 
-// 鼠标移动和释放处理
-const handleMouseMove = (e: MouseEvent) => {
+const handlePointerMove = (e: MouseEvent | TouchEvent) => {
   if (isDraggingProgress.value) {
     updateProgressFromEvent(e)
   }
   if (isDraggingVolume.value) {
     updateVolumeFromEvent(e)
   }
+  if ('touches' in e) {
+    e.preventDefault()
+  }
 }
 
-const handleMouseUp = () => {
+const handlePointerUp = (e?: TouchEvent | MouseEvent) => {
   if (isDraggingProgress.value) {
-    // 拖动结束时 seek 到目标位置
     const targetTime = (dragProgress.value / 100) * duration.value
     playerStore.seekTo(targetTime)
   }
   isDraggingProgress.value = false
   isDraggingVolume.value = false
   activeVolumeBar.value = null
+  if (e && 'touches' in e) {
+    e.preventDefault()
+  }
 }
 
 const seekToLyric = (time: number) => {
@@ -549,3 +572,8 @@ const seekToLyric = (time: number) => {
   transform: translateY(-50%) scale(1.15);
 }
 </style>
+
+
+
+
+

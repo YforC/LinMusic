@@ -31,7 +31,7 @@
       </div>
 
       <div v-else class="flex flex-col justify-center">
-        <span class="text-white/40 text-sm">未播放</span>
+        <span class="text-white/40 text-sm">未播�?/span>
       </div>
 
       <div v-if="currentSong" class="ml-auto flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -83,7 +83,7 @@
 
         <button
           class="btn-icon text-white/70 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all duration-300"
-          title="上一首"
+          title="上一�?
           @click="handlePrev"
         >
           <span class="material-symbols-outlined text-[28px]">skip_previous</span>
@@ -106,7 +106,7 @@
 
         <button
           class="btn-icon text-white/70 hover:text-white p-2 rounded-full hover:bg-white/5 transition-all duration-300"
-          title="下一首"
+          title="下一�?
           @click="handleNext"
         >
           <span class="material-symbols-outlined text-[28px]">skip_next</span>
@@ -138,6 +138,7 @@
           class="progress-bar group relative flex-1"
           :class="{ 'is-dragging': isDraggingProgress }"
           @mousedown="startProgressDrag"
+          @touchstart.prevent="startProgressDrag"
         >
           <div
             class="progress-bar-fill"
@@ -188,6 +189,7 @@
           ref="volumeBarRef"
           class="volume-slider flex-1"
           @mousedown="startVolumeDrag"
+          @touchstart.prevent="startVolumeDrag"
         >
           <div
             class="volume-slider-fill"
@@ -224,24 +226,20 @@ const {
   formattedDuration
 } = storeToRefs(playerStore)
 
-// 是否已喜欢
-const isLiked = ref(false)
+// 是否已喜�?const isLiked = ref(false)
 
-// 之前的音量（用于静音切换）
-const previousVolume = ref(0.7)
+// 之前的音量（用于静音切换�?const previousVolume = ref(0.7)
 
 // 播放队列是否打开
 const isQueueOpen = ref(false)
 
-// 拖动状态
-const isDraggingProgress = ref(false)
+// 拖动状�?const isDraggingProgress = ref(false)
 const isDraggingVolume = ref(false)
 const dragProgress = ref(0)
 const progressBarRef = ref<HTMLElement | null>(null)
 const volumeBarRef = ref<HTMLElement | null>(null)
 
-// 显示的进度（拖动时显示拖动进度，否则显示实际进度）
-const displayProgress = computed(() => {
+// 显示的进度（拖动时显示拖动进度，否则显示实际进度�?const displayProgress = computed(() => {
   return isDraggingProgress.value ? dragProgress.value : progress.value
 })
 
@@ -273,8 +271,7 @@ watch(currentSong, () => {
   checkCurrentSongLiked()
 }, { immediate: true })
 
-// 切换喜欢状态
-const toggleLike = async () => {
+// 切换喜欢状�?const toggleLike = async () => {
   if (!currentSong.value) return
 
   if (isLiked.value) {
@@ -291,13 +288,11 @@ const handleTogglePlay = () => {
   playerStore.togglePlay()
 }
 
-// 上一首
-const handlePrev = () => {
+// 上一�?const handlePrev = () => {
   playerStore.playPrev()
 }
 
-// 下一首
-const handleNext = () => {
+// 下一�?const handleNext = () => {
   playerStore.playNext()
 }
 
@@ -328,53 +323,71 @@ const toggleMute = () => {
   }
 }
 
-// 进度条拖动
-const startProgressDrag = (e: MouseEvent) => {
+// 进度条拖�?const getClientX = (event: MouseEvent | TouchEvent) => {
+  if ('touches' in event) {
+    const touch = event.touches[0] || event.changedTouches[0]
+    return touch ? touch.clientX : null
+  }
+  return event.clientX
+}
+
+// ��???o|?????�C???
+const startProgressDrag = (e: MouseEvent | TouchEvent) => {
+  if ('preventDefault' in e) e.preventDefault()
   isDraggingProgress.value = true
   updateProgressFromEvent(e)
 }
 
-const updateProgressFromEvent = (e: MouseEvent) => {
+const updateProgressFromEvent = (e: MouseEvent | TouchEvent) => {
   if (!progressBarRef.value) return
+  const clientX = getClientX(e)
+  if (clientX === null) return
   const rect = progressBarRef.value.getBoundingClientRect()
-  const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
   dragProgress.value = percent * 100
 }
 
-// 音量条拖动
-const startVolumeDrag = (e: MouseEvent) => {
+// ��?3��???????�C???
+const startVolumeDrag = (e: MouseEvent | TouchEvent) => {
+  if ('preventDefault' in e) e.preventDefault()
   isDraggingVolume.value = true
   updateVolumeFromEvent(e)
 }
 
-const updateVolumeFromEvent = (e: MouseEvent) => {
+const updateVolumeFromEvent = (e: MouseEvent | TouchEvent) => {
   if (!volumeBarRef.value) return
+  const clientX = getClientX(e)
+  if (clientX === null) return
   const rect = volumeBarRef.value.getBoundingClientRect()
-  const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
   playerStore.setVolume(percent)
 }
 
-// 鼠标移动和释放处理
-const handleMouseMove = (e: MouseEvent) => {
+// ��?????/����|??��?��???��?��?��???��??��????
+const handlePointerMove = (e: MouseEvent | TouchEvent) => {
   if (isDraggingProgress.value) {
     updateProgressFromEvent(e)
   }
   if (isDraggingVolume.value) {
     updateVolumeFromEvent(e)
   }
+  if ('touches' in e) {
+    e.preventDefault()
+  }
 }
 
-const handleMouseUp = () => {
+const handlePointerUp = (e?: TouchEvent | MouseEvent) => {
   if (isDraggingProgress.value) {
-    // 拖动结束时 seek 到目标位置
     const targetTime = (dragProgress.value / 100) * duration.value
     playerStore.seekTo(targetTime)
   }
   isDraggingProgress.value = false
   isDraggingVolume.value = false
+  if (e && 'touches' in e) {
+    e.preventDefault()
+  }
 }
 
-// 跳转到歌词页
 const goToLyrics = () => {
   if (currentSong.value) {
     router.push('/lyrics')
@@ -387,13 +400,19 @@ const toggleQueue = () => {
 }
 
 onMounted(() => {
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
+  document.addEventListener('mousemove', handlePointerMove)
+  document.addEventListener('mouseup', handlePointerUp)
+  document.addEventListener('touchmove', handlePointerMove, { passive: false })
+  document.addEventListener('touchend', handlePointerUp, { passive: false })
+  document.addEventListener('touchcancel', handlePointerUp, { passive: false })
 })
 
 onUnmounted(() => {
-  document.removeEventListener('mousemove', handleMouseMove)
-  document.removeEventListener('mouseup', handleMouseUp)
+  document.removeEventListener('mousemove', handlePointerMove)
+  document.removeEventListener('mouseup', handlePointerUp)
+  document.removeEventListener('touchmove', handlePointerMove)
+  document.removeEventListener('touchend', handlePointerUp)
+  document.removeEventListener('touchcancel', handlePointerUp)
 })
 </script>
 
@@ -444,3 +463,7 @@ onUnmounted(() => {
   transform: translateY(-50%) scale(1.15);
 }
 </style>
+
+
+
+

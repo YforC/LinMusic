@@ -211,6 +211,7 @@ body {
   cursor: pointer;
   transition: all 0.25s var(--ease-out-expo);
   overflow: visible;
+  touch-action: none;
 }
 
 .progress-bar:hover {
@@ -535,6 +536,7 @@ body {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.25s var(--ease-out-expo);
+  touch-action: none;
 }
 
 .volume-slider:hover {

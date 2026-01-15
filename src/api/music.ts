@@ -1,5 +1,16 @@
 // TuneHub API 封装
-const BASE_URL = import.meta.env.DEV ? '/music-api/api' : '/api/music'
+const isIosStandalone = () => {
+  if (typeof window === 'undefined') return false
+  const ua = window.navigator.userAgent || ''
+  const isIos = /iPad|iPhone|iPod/.test(ua)
+  const isStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+    || (window.navigator as any).standalone === true
+  return isIos && isStandalone
+}
+
+const BASE_URL = import.meta.env.DEV && !isIosStandalone()
+  ? '/music-api/api'
+  : '/api/music'
 
 export type Platform = 'netease' | 'kuwo' | 'qq'
 export type AudioQuality = '128k' | '320k' | 'flac' | 'flac24bit'
@@ -39,8 +50,7 @@ export interface PlaylistSong {
   types?: string[]
 }
 
-// 搜索歌曲（单平台）
-export async function searchSongs(
+// 搜索歌曲（单平台�?export async function searchSongs(
   keyword: string,
   platform: Platform = 'netease',
   limit: number = 20
@@ -67,8 +77,7 @@ export async function searchSongs(
   }
 }
 
-// 聚合搜索（多平台）
-export async function aggregateSearch(keyword: string): Promise<SearchResult[]> {
+// 聚合搜索（多平台�?export async function aggregateSearch(keyword: string): Promise<SearchResult[]> {
   try {
     const url = `${BASE_URL}/?type=aggregateSearch&keyword=${encodeURIComponent(keyword)}`
     const response = await fetch(url)
@@ -135,8 +144,7 @@ export async function getLyrics(id: string, platform: Platform): Promise<string>
   }
 }
 
-// 获取排行榜列表
-export async function getTopLists(platform: Platform): Promise<TopList[]> {
+// 获取排行榜列�?export async function getTopLists(platform: Platform): Promise<TopList[]> {
   try {
     const url = `${BASE_URL}/?source=${platform}&type=toplists`
     const response = await fetch(url)
@@ -152,8 +160,7 @@ export async function getTopLists(platform: Platform): Promise<TopList[]> {
   }
 }
 
-// 获取排行榜歌曲
-export async function getTopListSongs(id: string, platform: Platform): Promise<PlaylistSong[]> {
+// 获取排行榜歌�?export async function getTopListSongs(id: string, platform: Platform): Promise<PlaylistSong[]> {
   try {
     const url = `${BASE_URL}/?source=${platform}&id=${id}&type=toplist`
     const response = await fetch(url)
@@ -191,3 +198,4 @@ export async function getExternalPlaylist(
     return null
   }
 }
+
