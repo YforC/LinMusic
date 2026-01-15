@@ -1,4 +1,6 @@
 ﻿import type { Song, Playlist } from './types'
+import { getCoverUrl } from './music'
+import { normalizeImageUrl } from '@/utils/format'
 
 const BASE_URL = import.meta.env.DEV ? 'http://localhost:8788/api' : '/api'
 
@@ -8,15 +10,21 @@ interface ApiResponse<T> {
   error?: string
 }
 
-const toPlaylist = (item: any): Playlist => ({
-  id: item.id,
-  name: item.name,
-  description: item.description || undefined,
-  coverUrl: item.coverUrl || item.cover_url || undefined,
-  songCount: item.songCount ?? item.song_count ?? 0,
-  createdAt: item.createdAt || item.created_at,
-  updatedAt: item.updatedAt || item.updated_at
-})
+const toPlaylist = (item: any): Playlist => {
+  const rawCover = item.coverUrl || item.cover_url
+  const fallbackCover = item.latest_song_id && item.latest_platform
+    ? getCoverUrl(String(item.latest_song_id), item.latest_platform)
+    : undefined
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description || undefined,
+    coverUrl: normalizeImageUrl(rawCover) || normalizeImageUrl(fallbackCover),
+    songCount: item.songCount ?? item.song_count ?? 0,
+    createdAt: item.createdAt || item.created_at,
+    updatedAt: item.updatedAt || item.updated_at
+  }
+}
 
 const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
   let response: Response
@@ -112,6 +120,8 @@ export async function addSongToPlaylist(
   song: Song
 ): Promise<{ success: boolean; duplicated?: boolean; error?: string }> {
   try {
+    const coverUrl = normalizeImageUrl(song.coverUrl)
+      || normalizeImageUrl(getCoverUrl(String(song.id), song.platform))
     const songToAdd: Song = {
       id: String(song.id),
       platform: song.platform,
@@ -119,7 +129,7 @@ export async function addSongToPlaylist(
       artist: song.artist || '未知歌手',
       album: song.album,
       duration: song.duration,
-      coverUrl: song.coverUrl
+      coverUrl
     }
 
     const data = await request<{ duplicated?: boolean }>('/playlist-songs', {

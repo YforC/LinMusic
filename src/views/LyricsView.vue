@@ -348,6 +348,9 @@ const handleFullscreenChange = () => {
 }
 
 onMounted(() => {
+  if (!currentSong.value) {
+    router.replace('/')
+  }
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)

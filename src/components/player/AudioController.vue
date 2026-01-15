@@ -149,12 +149,14 @@ async function playSong() {
         }
       },
       onend: () => {
-        playerStore.isPlaying = false
         if (animationId) {
           cancelAnimationFrame(animationId)
           animationId = null
         }
-        handleSongEnd()
+        const advanced = handleSongEnd()
+        if (!advanced) {
+          playerStore.isPlaying = false
+        }
       },
       onloaderror: (id, error) => {
         console.error('Load error:', id, error)
@@ -194,9 +196,12 @@ function updateProgress() {
 }
 
 // 歌曲结束处理
-function handleSongEnd() {
+function handleSongEnd(): boolean {
   const mode = playMode.value
-  const { playlist, currentIndex } = playerStore
+  const playlist = playerStore.playlist
+  const currentIndex = playerStore.currentIndex
+
+  if (!playlist.length) return false
 
   switch (mode) {
     case 'single':
@@ -204,21 +209,24 @@ function handleSongEnd() {
       if (howl) {
         howl.seek(0)
         howl.play()
+        return true
       }
-      break
+      return false
     case 'loop':
       // 列表循环
       playerStore.playNext()
-      break
+      return true
     case 'shuffle':
       // 随机播放
       playerStore.playNext()
-      break
+      return true
     default:
       // 顺序播放
       if (currentIndex < playlist.length - 1) {
         playerStore.playNext()
+        return true
       }
+      return false
   }
 }
 

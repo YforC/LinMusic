@@ -39,6 +39,20 @@ export async function onRequest(context: RequestContext): Promise<Response> {
               LIMIT 1
             )
           ) as cover_url,
+          (
+            SELECT song_id
+            FROM playlist_songs
+            WHERE playlist_id = p.id
+            ORDER BY added_at DESC, sort_order DESC
+            LIMIT 1
+          ) as latest_song_id,
+          (
+            SELECT platform
+            FROM playlist_songs
+            WHERE playlist_id = p.id
+            ORDER BY added_at DESC, sort_order DESC
+            LIMIT 1
+          ) as latest_platform,
           p.created_at,
           p.updated_at,
           COUNT(ps.id) as song_count
