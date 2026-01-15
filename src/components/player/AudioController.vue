@@ -71,6 +71,9 @@ const detachAudioNodeListeners = () => {
   if (!audioNode) return
   audioNode.removeEventListener('timeupdate', handleNativeTimeUpdate)
   audioNode.removeEventListener('ended', handleNativeEnded)
+  if (audioNode.dataset.lmusicAttached === 'true' && audioNode.parentElement) {
+    audioNode.parentElement.removeChild(audioNode)
+  }
   audioNode = null
 }
 
@@ -80,6 +83,19 @@ const bindAudioNodeListeners = () => {
   if (!node) return
   audioNode = node
   audioNode.preload = 'metadata'
+  audioNode.setAttribute('playsinline', 'true')
+  audioNode.setAttribute('webkit-playsinline', 'true')
+  audioNode.setAttribute('x-webkit-airplay', 'allow')
+  if (!audioNode.parentElement && document.body) {
+    audioNode.dataset.lmusicAttached = 'true'
+    audioNode.style.position = 'fixed'
+    audioNode.style.left = '-9999px'
+    audioNode.style.width = '1px'
+    audioNode.style.height = '1px'
+    audioNode.style.opacity = '0'
+    audioNode.style.pointerEvents = 'none'
+    document.body.appendChild(audioNode)
+  }
   audioNode.addEventListener('timeupdate', handleNativeTimeUpdate)
   audioNode.addEventListener('ended', handleNativeEnded)
 }
