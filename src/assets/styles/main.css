@@ -65,6 +65,7 @@ html, body, #app {
 
 html {
   background-color: #000000;
+  overscroll-behavior: none;
 }
 
 body {
@@ -72,6 +73,7 @@ body {
   background-color: #000000;
   color: #ffffff;
   overflow: hidden;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -83,6 +85,12 @@ body {
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
   background-color: #000000;
+}
+
+.app-scroll {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 /* Selection */

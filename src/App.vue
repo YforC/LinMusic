@@ -5,7 +5,7 @@
         <AppSidebar />
       </div>
 
-      <main class="flex-1 overflow-y-auto bg-background-base relative rounded-2xl md:rounded-lg mt-2 mx-2 md:mt-2 md:mr-2 md:mb-2 md:ml-0 overflow-x-hidden spotify-gradient">
+      <main class="app-scroll flex-1 overflow-y-auto bg-background-base relative rounded-2xl md:rounded-lg mt-2 mx-2 md:mt-2 md:mr-2 md:mb-2 md:ml-0 overflow-x-hidden spotify-gradient">
         <div
           v-if="!isLyricsPage"
           class="md:hidden sticky top-0 z-20 flex items-center gap-3 px-3 py-3 bg-background-base/85 backdrop-blur border-b border-white/10 rounded-b-2xl shadow-[0_8px_20px_rgba(0,0,0,0.35)]"

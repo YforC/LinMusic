@@ -104,7 +104,7 @@
     </div>
 
     <!-- Table Header -->
-    <div class="px-4 sm:px-6 md:px-8 sticky top-0 bg-background-base z-20 border-b border-white/10 pb-2 pt-2 mb-2 shadow-sm">
+    <div class="px-4 sm:px-6 md:px-8 bg-background-base border-b border-white/10 pb-2 pt-2 mb-2">
       <div class="grid grid-cols-[16px_1fr_40px] md:grid-cols-[16px_4fr_3fr_minmax(60px,1fr)] gap-4 text-sm font-normal text-white/50 items-center px-4">
         <div class="text-center text-base">#</div>
         <div class="text-xs font-medium uppercase tracking-wider">标题</div>

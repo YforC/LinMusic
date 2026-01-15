@@ -95,6 +95,22 @@ export const usePlayerStore = defineStore('player', () => {
     isPlaying.value = !isPlaying.value
   }
 
+  const getRandomIndex = (excludeIndex: number): number => {
+    const count = playlist.value.length
+    if (count <= 1) return 0
+    let index = Math.floor(Math.random() * count)
+    if (excludeIndex < 0) return index
+    let guard = 0
+    while (index === excludeIndex && guard < 8) {
+      index = Math.floor(Math.random() * count)
+      guard += 1
+    }
+    if (index === excludeIndex) {
+      index = (excludeIndex + 1) % count
+    }
+    return index
+  }
+
   // 下一首
   function playNext() {
     if (playlist.value.length === 0) return
@@ -103,7 +119,7 @@ export const usePlayerStore = defineStore('player', () => {
 
     switch (playMode.value) {
       case 'shuffle':
-        nextIndex = Math.floor(Math.random() * playlist.value.length)
+        nextIndex = getRandomIndex(currentIndex.value)
         break
       case 'single':
         nextIndex = currentIndex.value
@@ -123,7 +139,7 @@ export const usePlayerStore = defineStore('player', () => {
 
     switch (playMode.value) {
       case 'shuffle':
-        prevIndex = Math.floor(Math.random() * playlist.value.length)
+        prevIndex = getRandomIndex(currentIndex.value)
         break
       default:
         prevIndex = currentIndex.value - 1

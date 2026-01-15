@@ -339,6 +339,7 @@ function handleSongEnd(): boolean {
     case 'single':
       // 单曲循环
       if (howl) {
+        endHandled = false
         howl.seek(0)
         howl.play()
         return true
