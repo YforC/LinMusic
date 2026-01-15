@@ -747,49 +747,31 @@ const updateVolumeFromEvent = (e: MouseEvent | TouchEvent) => {
 // é?????/è§|??§?§???¨?’?é???”??¤????
 
 const handlePointerMove = (e: MouseEvent | TouchEvent) => {
-
+  const isDragging = isDraggingProgress.value || isDraggingVolume.value
   if (isDraggingProgress.value) {
-
     updateProgressFromEvent(e)
-
   }
-
   if (isDraggingVolume.value) {
-
     updateVolumeFromEvent(e)
-
   }
-
-  if ('touches' in e) {
-
+  if (isDragging && 'touches' in e) {
     e.preventDefault()
-
   }
-
 }
 
 
 
 const handlePointerUp = (e?: TouchEvent | MouseEvent) => {
-
+  const wasDragging = isDraggingProgress.value || isDraggingVolume.value
   if (isDraggingProgress.value) {
-
     const targetTime = (dragProgress.value / 100) * duration.value
-
     playerStore.seekTo(targetTime)
-
   }
-
   isDraggingProgress.value = false
-
   isDraggingVolume.value = false
-
-  if (e && 'touches' in e) {
-
+  if (wasDragging && e && 'touches' in e) {
     e.preventDefault()
-
   }
-
 }
 
 
