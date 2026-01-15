@@ -16,6 +16,7 @@
           :style="menuPosition"
         >
           <div
+            ref="menuPanelRef"
             class="bg-[#282828] rounded-lg shadow-2xl py-1 min-w-[200px] border border-white/10 overflow-hidden"
             @click.stop
           >
@@ -49,7 +50,7 @@
               >
                 <button
                   class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors border-b border-white/10"
-                  @click="createNewPlaylist"
+                  @click.stop="createNewPlaylist"
                 >
                   <span class="material-symbols-outlined text-[20px]">add</span>
                   <span class="text-sm font-medium">新建歌单</span>
@@ -59,7 +60,7 @@
                     v-for="playlist in playlists"
                     :key="playlist.id"
                     class="menu-item w-full px-4 py-2.5 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                    @click="addToPlaylist(playlist.id)"
+                    @click.stop="addToPlaylist(playlist.id)"
                   >
                     <span class="material-symbols-outlined text-[18px] text-white/50">queue_music</span>
                     <span class="text-sm truncate">{{ playlist.name }}</span>
@@ -153,6 +154,7 @@ const emit = defineEmits<{
 const playerStore = usePlayerStore()
 
 const menuRef = ref<HTMLElement | null>(null)
+const menuPanelRef = ref<HTMLElement | null>(null)
 const playlistMenuItemRef = ref<HTMLElement | null>(null)
 const isOpen = ref(false)
 const showPlaylistSubmenu = ref(false)
@@ -162,6 +164,11 @@ const playlists = ref<Playlist[]>([])
 const isLiked = ref(false)
 const menuPosition = ref({ top: '0px', left: '0px' })
 let submenuTimeout: ReturnType<typeof setTimeout> | null = null
+const isCoarsePointer = ref(false)
+let coarsePointerQuery: MediaQueryList | null = null
+const handlePointerChange = (event: MediaQueryListEvent) => {
+  isCoarsePointer.value = event.matches
+}
 
 // Load playlists
 const loadPlaylists = async () => {
@@ -171,6 +178,7 @@ const loadPlaylists = async () => {
 
 // Open playlist submenu with delay
 const openPlaylistSubmenu = () => {
+  if (isCoarsePointer.value) return
   if (submenuTimeout) {
     clearTimeout(submenuTimeout)
     submenuTimeout = null
@@ -180,6 +188,7 @@ const openPlaylistSubmenu = () => {
 
 // Close playlist submenu with delay
 const closePlaylistSubmenu = () => {
+  if (isCoarsePointer.value) return
   submenuTimeout = setTimeout(() => {
     showPlaylistSubmenu.value = false
   }, 100)
@@ -249,6 +258,11 @@ const addToQueue = () => {
 
 // Add to playlist
 const addToPlaylist = async (playlistId: number) => {
+  if (!props.song.id) {
+    globalToast.error('歌曲信息不完整，无法添加')
+    closeMenu()
+    return
+  }
   const success = await addSongToPlaylist(playlistId, props.song)
   if (success) {
     globalToast.success('已添加到歌单')
@@ -314,19 +328,34 @@ const downloadSong = () => {
 
 // Click outside to close
 const handleClickOutside = (e: MouseEvent) => {
-  if (menuRef.value && !menuRef.value.contains(e.target as Node)) {
-    closeMenu()
-  }
+  const target = e.target as Node
+  if (menuRef.value && menuRef.value.contains(target)) return
+  if (menuPanelRef.value && menuPanelRef.value.contains(target)) return
+  closeMenu()
 }
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  coarsePointerQuery = window.matchMedia('(pointer: coarse)')
+  isCoarsePointer.value = coarsePointerQuery.matches
+  if (coarsePointerQuery.addEventListener) {
+    coarsePointerQuery.addEventListener('change', handlePointerChange)
+  } else if (coarsePointerQuery.addListener) {
+    coarsePointerQuery.addListener(handlePointerChange)
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   if (submenuTimeout) {
     clearTimeout(submenuTimeout)
+  }
+  if (coarsePointerQuery) {
+    if (coarsePointerQuery.removeEventListener) {
+      coarsePointerQuery.removeEventListener('change', handlePointerChange)
+    } else if (coarsePointerQuery.removeListener) {
+      coarsePointerQuery.removeListener(handlePointerChange)
+    }
   }
 })
 </script>

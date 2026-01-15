@@ -45,9 +45,9 @@
 
       <!-- Main Content Area: Split View -->
       <main class="flex-1 overflow-hidden min-h-0 py-2 md:py-4">
-        <div class="flex h-full w-full flex-row items-stretch gap-6 md:gap-16 overflow-x-auto md:overflow-visible no-scrollbar snap-x snap-mandatory md:snap-none">
+        <div class="flex h-full w-full flex-row items-stretch gap-6 md:gap-16 overflow-x-auto md:overflow-visible no-scrollbar snap-x snap-mandatory md:snap-none touch-pan-x">
         <!-- Left: Album Art -->
-        <div class="w-full md:w-5/12 lg:w-4/12 flex items-center justify-center md:justify-end shrink-0 max-h-[45vh] md:max-h-full animate-slide-up snap-start md:snap-none" style="animation-delay: 0.1s;">
+        <div class="w-full md:w-5/12 lg:w-4/12 flex items-center justify-center md:justify-end shrink-0 min-w-full md:min-w-0 max-h-[45vh] md:max-h-full animate-slide-up snap-start md:snap-none" style="animation-delay: 0.1s;">
           <div class="relative aspect-square w-full max-w-[380px] md:max-w-[450px] group">
             <!-- Glow effect behind album -->
             <div
@@ -72,13 +72,17 @@
             <!-- Subtle border and shine -->
             <div class="absolute inset-0 rounded-2xl border border-white/10 pointer-events-none"></div>
             <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-[11px] text-white/70 flex items-center gap-1 md:hidden">
+              <span class="material-symbols-outlined text-[14px]">swipe</span>
+              左滑查看歌词
+            </div>
           </div>
         </div>
 
         <!-- Right: Lyrics -->
         <div
           ref="lyricsContainer"
-          class="w-full md:w-7/12 lg:w-6/12 h-full flex flex-col justify-center relative overflow-hidden animate-slide-up snap-start md:snap-none"
+          class="w-full md:w-7/12 lg:w-6/12 h-full flex flex-col justify-center relative overflow-hidden animate-slide-up snap-start md:snap-none min-w-full md:min-w-0"
           style="animation-delay: 0.2s;"
         >
           <div class="lyrics-mask h-full w-full overflow-y-auto no-scrollbar scroll-smooth py-20 sm:py-24 md:py-28 px-4 md:px-6">
