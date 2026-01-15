@@ -29,19 +29,6 @@
               <span class="text-sm font-medium">添加到播放列表</span>
             </button>
 
-            <!-- Quick Add -->
-            <button
-              v-if="quickAddPlaylist"
-              class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-              @click="addToLastPlaylist"
-            >
-              <span class="material-symbols-outlined text-[20px]">history</span>
-              <div class="flex flex-col">
-                <span class="text-sm font-medium">添加到上次歌单</span>
-                <span class="text-xs text-white/50 truncate">{{ quickAddPlaylist.name }}</span>
-              </div>
-            </button>
-
             <!-- Add to Playlist -->
             <div class="relative" @mouseenter="openPlaylistSubmenu" @mouseleave="closePlaylistSubmenu">
               <button
@@ -62,6 +49,21 @@
                 class="mt-1 bg-[#1f1f1f]/95 rounded-xl shadow-[0_12px_28px_rgba(0,0,0,0.45)] py-1 w-full border border-white/10 z-[250] sm:absolute sm:top-0 sm:mt-0 sm:w-[200px]"
                 :class="submenuAlign === 'left' ? 'sm:right-full sm:mr-2' : 'sm:left-full sm:ml-2'"
               >
+                <div v-if="quickAddPlaylist" class="px-3 pt-2 pb-3 border-b border-white/10">
+                  <button
+                    class="w-full flex items-center justify-between rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 transition-all"
+                    @click.stop="addToLastPlaylist"
+                  >
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="material-symbols-outlined text-[18px] text-white/70">history</span>
+                      <div class="flex flex-col min-w-0 text-left">
+                        <span class="text-xs text-white/60">最近歌单</span>
+                        <span class="text-sm font-medium text-white truncate">{{ quickAddPlaylist.name }}</span>
+                      </div>
+                    </div>
+                    <span class="text-xs font-semibold text-primary whitespace-nowrap">一键添加</span>
+                  </button>
+                </div>
                 <button
                   class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors border-b border-white/10"
                   @click.stop="createNewPlaylist"
@@ -346,8 +348,8 @@ const addToPlaylist = async (playlistId: number, playlistName?: string) => {
     closeMenu()
     return
   }
-  const success = await addSongToPlaylist(playlistId, props.song)
-  if (success) {
+  const result = await addSongToPlaylist(playlistId, props.song)
+  if (result.success) {
     const match = playlists.value.find((playlist) => playlist.id === playlistId)
     const displayName = match?.name || playlistName
     if (match) {
@@ -355,7 +357,9 @@ const addToPlaylist = async (playlistId: number, playlistName?: string) => {
     } else if (displayName) {
       saveLastPlaylist({ id: playlistId, name: displayName })
     }
-    if (displayName) {
+    if (result.duplicated) {
+      globalToast.info(displayName ? `已在歌单中：${displayName}` : '已在歌单中')
+    } else if (displayName) {
       globalToast.success(`已添加到歌单：${displayName}`)
     } else {
       globalToast.success('已添加到歌单')
@@ -363,7 +367,7 @@ const addToPlaylist = async (playlistId: number, playlistName?: string) => {
     emit('action', 'playlist')
     window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
   } else {
-    globalToast.error('添加失败')
+    globalToast.error(result.error || '添加失败')
   }
   closeMenu()
 }
@@ -391,10 +395,14 @@ const handleCreatePlaylist = async () => {
   const newPlaylist = await createPlaylist(newPlaylistName.value)
   if (newPlaylist) {
     playlists.value.unshift(newPlaylist)
-    const success = await addSongToPlaylist(newPlaylist.id, props.song)
-    if (success) {
+    const result = await addSongToPlaylist(newPlaylist.id, props.song)
+    if (result.success) {
       saveLastPlaylist(newPlaylist)
-      globalToast.success(`已创建并添加到歌单：${newPlaylist.name}`)
+      if (result.duplicated) {
+        globalToast.info(`已在歌单中：${newPlaylist.name}`)
+      } else {
+        globalToast.success(`已创建并添加到歌单：${newPlaylist.name}`)
+      }
       emit('action', 'playlist')
       window.dispatchEvent(new CustomEvent('linmusic-playlists-changed'))
     }

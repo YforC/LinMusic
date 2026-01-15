@@ -44,6 +44,18 @@ export async function onRequest(context: RequestContext): Promise<Response> {
       return errorResponse('歌单不存在', 404)
     }
 
+    const existing = await env.DB.prepare(`
+      SELECT id FROM playlist_songs WHERE playlist_id = ? AND song_id = ? AND platform = ?
+      LIMIT 1
+    `).bind(body.playlistId, body.id, body.platform).first() as { id: number } | null
+
+    if (existing?.id) {
+      return successResponse({
+        id: existing.id,
+        duplicated: true
+      })
+    }
+
     // 获取当前最大排序值
     const maxOrder = await env.DB.prepare(`
       SELECT MAX(sort_order) as max_order FROM playlist_songs WHERE playlist_id = ?

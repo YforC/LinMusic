@@ -107,7 +107,10 @@ export async function deletePlaylist(id: number): Promise<boolean> {
   }
 }
 
-export async function addSongToPlaylist(playlistId: number, song: Song): Promise<boolean> {
+export async function addSongToPlaylist(
+  playlistId: number,
+  song: Song
+): Promise<{ success: boolean; duplicated?: boolean; error?: string }> {
   try {
     const songToAdd: Song = {
       id: String(song.id),
@@ -119,14 +122,15 @@ export async function addSongToPlaylist(playlistId: number, song: Song): Promise
       coverUrl: song.coverUrl
     }
 
-    await request('/playlist-songs', {
+    const data = await request<{ duplicated?: boolean }>('/playlist-songs', {
       method: 'POST',
       body: JSON.stringify({ playlistId, ...songToAdd })
     })
-    return true
+    return { success: true, duplicated: !!data?.duplicated }
   } catch (error) {
     console.error('Add song to playlist failed:', error)
-    return false
+    const message = error instanceof Error ? error.message : '添加失败'
+    return { success: false, error: message }
   }
 }
 
