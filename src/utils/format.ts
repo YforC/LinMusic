@@ -91,3 +91,12 @@ export const platformNames: Record<string, string> = {
 export function getPlatformName(platform: string): string {
   return platformNames[platform] || platform
 }
+
+export function normalizeImageUrl(url?: string | null): string | undefined {
+  if (!url) return undefined
+  const trimmed = url.trim()
+  if (!trimmed) return undefined
+  if (trimmed.startsWith('//')) return `https:${trimmed}`
+  if (trimmed.startsWith('http://')) return `https://${trimmed.slice(7)}`
+  return trimmed
+}

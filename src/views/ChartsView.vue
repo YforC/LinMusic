@@ -182,7 +182,7 @@
 
         <div class="flex items-center gap-1">
           <button
-            class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
+            class="btn-icon text-white/30 hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
             title="添加到播放列表"
             @click.stop="addToQueue(song)"
           >
@@ -190,7 +190,7 @@
           </button>
           <SongMenu
             :song="song"
-            button-class="opacity-0 group-hover:opacity-100"
+            button-class="opacity-100 md:opacity-0 md:group-hover:opacity-100"
           />
         </div>
       </div>
@@ -210,7 +210,7 @@ import { useRoute } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import { getTopLists, getTopListSongs, getCoverUrl, type Platform, type TopList } from '@/api/music'
 import { globalToast } from '@/composables/useToast'
-import { normalizeDuration } from '@/utils/format'
+import { normalizeDuration, normalizeImageUrl } from '@/utils/format'
 import SongMenu from '@/components/music/SongMenu.vue'
 import type { Song } from '@/api/types'
 
@@ -236,10 +236,34 @@ const dominantColor = ref('#121212')
 const coverImgRef = ref<HTMLImageElement | null>(null)
 const toplistScrollRef = ref<HTMLElement | null>(null)
 
-const resolveCoverUrl = (item: any, platform: Platform): string | undefined => {
-  const candidates = [item.pic, item.coverUrl, item.cover, item.image, item.img]
-  const direct = candidates.find((value) => typeof value === 'string' && value.length > 0)
-  return direct || getCoverUrl(item.id, platform)
+const resolveSongId = (item: any): string => {
+  const value = item.id ?? item.songId ?? item.song_id ?? item.rid ?? item.musicId ?? item.mid ?? item.musicrid ?? item.musicRid ?? item.hash
+  return value ? String(value) : ''
+}
+
+const resolveSongName = (item: any): string => {
+  return item.name || item.songName || item.song_name || item.title || '未知歌曲'
+}
+
+const resolveCoverUrl = (item: any, platform: Platform, songId?: string): string | undefined => {
+  const candidates = [
+    item.pic,
+    item.coverUrl,
+    item.cover,
+    item.image,
+    item.img,
+    item.picUrl,
+    item.pic_url,
+    item.pic120,
+    item.pic300,
+    item.albumPic,
+    item.album_pic
+  ]
+  const direct = candidates.find((value) => typeof value === 'string' && value.trim().length > 0)
+  const normalized = normalizeImageUrl(direct)
+  if (normalized) return normalized
+  if (songId) return normalizeImageUrl(getCoverUrl(songId, platform))
+  return undefined
 }
 
 const resolveArtist = (item: any): string => {
@@ -414,11 +438,12 @@ const selectToplist = async (toplist: TopList) => {
     const songList = await getTopListSongs(toplist.id, currentPlatform.value)
 
     songs.value = songList.map((item: any) => {
-      const coverUrl = resolveCoverUrl(item, currentPlatform.value)
+      const songId = resolveSongId(item)
+      const coverUrl = resolveCoverUrl(item, currentPlatform.value, songId)
       return {
-        id: item.id,
+        id: songId,
         platform: currentPlatform.value,
-        name: item.name,
+        name: resolveSongName(item),
         artist: resolveArtist(item),
         album: resolveAlbum(item),
         duration: resolveDuration(item),

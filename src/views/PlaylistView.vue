@@ -110,14 +110,14 @@
             <div class="w-20 sm:w-28 md:w-32 text-right text-text-subdued text-sm">
               <div class="flex items-center justify-end gap-2">
                 <button
-                  class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
+                  class="btn-icon text-white/30 hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
                   title="添加到播放列表"
                   @click.stop="addToQueue(song)"
                 >
                   <span class="material-symbols-outlined text-[20px]">playlist_add</span>
                 </button>
                 <button
-                  class="btn-icon text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                  class="btn-icon text-white/30 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
                   title="从歌单移除"
                   @click.stop="removeSong(song)"
                 >

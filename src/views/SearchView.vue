@@ -120,7 +120,7 @@
 
             <div class="flex items-center gap-2">
               <button
-                class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
+                class="btn-icon text-white/30 hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
                 title="添加到播放列表"
                 @click.stop="addToQueue(song)"
               >
@@ -128,7 +128,7 @@
               </button>
               <SongMenu
                 :song="song"
-                button-class="opacity-0 group-hover:opacity-100"
+                button-class="opacity-100 md:opacity-0 md:group-hover:opacity-100"
               />
             </div>
           </div>
@@ -178,7 +178,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { aggregateSearch, searchSongs, type Platform } from '@/api/music'
-import { getPlatformName } from '@/utils/format'
+import { getPlatformName, normalizeImageUrl } from '@/utils/format'
 import { globalToast } from '@/composables/useToast'
 import SongMenu from '@/components/music/SongMenu.vue'
 import type { Song } from '@/api/types'
@@ -256,7 +256,7 @@ const handleSearch = async () => {
       name: item.name,
       artist: item.artist,
       album: item.album,
-      coverUrl: item.pic
+      coverUrl: normalizeImageUrl(item.pic)
     }))
   } catch (error) {
     console.error('Search failed:', error)

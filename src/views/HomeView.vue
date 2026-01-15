@@ -51,7 +51,7 @@ import type { Song } from '@/api/types'
 import { usePlayerStore } from '@/stores/player'
 import { globalToast } from '@/composables/useToast'
 import { getTopLists, getTopListSongs, getCoverUrl, type Platform } from '@/api/music'
-import { normalizeDuration } from '@/utils/format'
+import { normalizeDuration, normalizeImageUrl } from '@/utils/format'
 
 defineOptions({
   name: 'HomeView'
@@ -73,8 +73,9 @@ interface FeaturedPlaylist {
 const featuredPlaylists = ref<FeaturedPlaylist[]>([])
 const resolveCoverUrl = (item: any, platform: Platform): string | undefined => {
   const candidates = [item.pic, item.coverUrl, item.cover, item.image, item.img]
-  const direct = candidates.find((value) => typeof value === 'string' && value.length > 0)
-  return direct || getCoverUrl(item.id, platform)
+  const direct = candidates.find((value) => typeof value === 'string' && value.trim().length > 0)
+  const normalized = normalizeImageUrl(direct)
+  return normalized || normalizeImageUrl(getCoverUrl(item.id, platform))
 }
 
 const resolveArtist = (item: any): string => {

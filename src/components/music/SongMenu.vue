@@ -45,7 +45,7 @@
               <!-- Playlist Submenu -->
               <div
                 v-if="showPlaylistSubmenu"
-                class="absolute left-full top-0 ml-1 bg-[#282828] rounded-lg shadow-2xl py-1 min-w-[180px] border border-white/10 z-[250]"
+                class="absolute right-0 top-full mt-1 bg-[#282828] rounded-lg shadow-2xl py-1 w-[180px] border border-white/10 z-[250] sm:left-full sm:right-auto sm:top-0 sm:mt-0 sm:ml-1"
               >
                 <button
                   class="menu-item w-full px-4 py-3 flex items-center gap-3 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors border-b border-white/10"

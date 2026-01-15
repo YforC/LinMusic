@@ -17,7 +17,7 @@
 
       <!-- Play Button -->
       <div
-        class="absolute bottom-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20"
+        class="absolute bottom-2 right-2 translate-y-0 opacity-100 sm:translate-y-4 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 transition-all duration-300 z-20"
         @click.stop="$emit('play', playlist)"
       >
         <div class="btn-play w-12 h-12">
@@ -26,7 +26,7 @@
       </div>
 
       <!-- Add to Queue Button -->
-      <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+      <div class="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 z-10">
         <button
           class="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 hover:scale-105 text-white transition-all duration-200"
           title="添加到播放列表"

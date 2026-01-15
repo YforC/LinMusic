@@ -91,14 +91,14 @@
             <td class="py-3 px-3 text-text-subdued group-hover:text-white text-right">
               <div class="flex items-center justify-end gap-2">
                 <button
-                  class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
+                  class="btn-icon text-white/30 hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
                   title="添加到播放列表"
                   @click.stop="addToQueue(song)"
                 >
                   <span class="material-symbols-outlined text-[20px]">playlist_add</span>
                 </button>
                 <span
-                  class="material-symbols-outlined text-primary text-lg fill-1 opacity-0 group-hover:opacity-100 cursor-pointer hover:scale-110 transition-transform"
+                  class="material-symbols-outlined text-primary text-lg fill-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer hover:scale-110 transition-transform"
                   @click.stop="unlikeSong(song)"
                 >
                   favorite
@@ -106,7 +106,7 @@
                 <span class="text-white/50 w-12 text-right">{{ formatDuration(song.duration) }}</span>
                 <SongMenu
                   :song="song"
-                  button-class="opacity-0 group-hover:opacity-100"
+                  button-class="opacity-100 md:opacity-0 md:group-hover:opacity-100"
                 />
               </div>
             </td>

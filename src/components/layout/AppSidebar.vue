@@ -117,9 +117,9 @@
             </Transition>
           </div>
           <Transition name="fade-slide">
-            <button
+              <button
               v-if="!sidebarCollapsed"
-              class="btn-icon text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+              class="btn-icon text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200"
               title="新建歌单"
               @click="showCreatePlaylist = true"
             >

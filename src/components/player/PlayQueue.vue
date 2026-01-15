@@ -71,7 +71,7 @@
                 <p class="text-white/50 text-xs truncate">{{ song.artist }}</p>
               </div>
               <button
-                class="btn-icon text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                class="btn-icon text-white/30 hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 @click.stop="removeFromQueue(currentIndex + 1 + index)"
               >
                 <span class="material-symbols-outlined text-lg">close</span>
