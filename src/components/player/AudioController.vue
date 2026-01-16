@@ -86,6 +86,11 @@ let endHandled = false
 
 
 
+// 标记是否正在 seek，防止 updateProgress 覆盖目标位置
+let isSeeking = false
+
+
+
 
 
 
@@ -730,32 +735,32 @@ const registerMediaSessionHandlers = () => {
 
 
 
-// 鐠哄疇娴嗛崚鐗堝瘹鐎规碍妞傞梻?
+// 跳转到指定时间
 
 
 
 function seek(time: number) {
-
   if (!howl) return
 
+  isSeeking = true
   const wasPlaying = playerStore.isPlaying
 
   howl.seek(time)
-
+  // 立即同步 currentTime，避免进度条跳动
+  playerStore.currentTime = time
   updateMediaSessionPosition()
 
   if (wasPlaying) {
-
     void resumeAudioContext()
-
     if (!howl.playing()) {
-
       howl.play()
-
     }
-
   }
 
+  // 延迟重置 isSeeking，确保 howl 已经更新到新位置
+  setTimeout(() => {
+    isSeeking = false
+  }, 100)
 }
 
 
@@ -810,19 +815,11 @@ function handleTrackEnd() {
 
 
 
-  const advanced = handleSongEnd()
-
-
-
-  if (!advanced) {
-
-
-
-    playerStore.isPlaying = false
-
-
-
-  }
+  handleSongEnd().then(advanced => {
+    if (!advanced) {
+      playerStore.isPlaying = false
+    }
+  })
 
 
 
@@ -940,47 +937,27 @@ async function playSong() {
 
 function updateProgress() {
 
-
-
   if (howl && playerStore.isPlaying) {
-
-
-
-    playerStore.currentTime = howl.seek() as number
-
-
+    // 如果正在 seek，不要覆盖 currentTime
+    if (!isSeeking) {
+      playerStore.currentTime = howl.seek() as number
+    }
 
     playerStore.updateLyricIndex()
 
-
-
     const now = Date.now()
-
-
 
     if (now - lastPositionUpdate > 1000) {
 
-
-
       updateMediaSessionPosition()
-
-
 
       lastPositionUpdate = now
 
-
-
     }
-
-
 
     animationId = requestAnimationFrame(updateProgress)
 
-
-
   }
-
-
 
 }
 
@@ -994,7 +971,7 @@ function updateProgress() {
 
 
 
-function handleSongEnd(): boolean {
+async function handleSongEnd(): Promise<boolean> {
 
 
 
@@ -1016,11 +993,8 @@ function handleSongEnd(): boolean {
 
   if (!playlist.length) return false
 
-
-
-
-
-
+  // iOS PWA 锁屏后需要先恢复 audio context
+  await resumeAudioContext()
 
   switch (mode) {
 
@@ -1044,11 +1018,12 @@ function handleSongEnd(): boolean {
 
         howl.seek(0)
 
-
-
-        howl.play()
-
-
+        // iOS 需要延迟播放以确保 audio context 已恢复
+        setTimeout(() => {
+          if (howl && !howl.playing()) {
+            howl.play()
+          }
+        }, 50)
 
         return true
 
@@ -1070,7 +1045,7 @@ function handleSongEnd(): boolean {
 
 
 
-      playerStore.playNext()
+      setTimeout(() => { playerStore.playNext() }, 50)
 
 
 
@@ -1082,11 +1057,11 @@ function handleSongEnd(): boolean {
 
 
 
-      // 闂呭繑婧�閹绢厽鏂?
+      // 随机播放
 
 
 
-      playerStore.playNext()
+      setTimeout(() => { playerStore.playNext() }, 50)
 
 
 
@@ -1106,7 +1081,7 @@ function handleSongEnd(): boolean {
 
 
 
-        playerStore.playNext()
+        setTimeout(() => { playerStore.playNext() }, 50)
 
 
 

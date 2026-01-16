@@ -1,6 +1,6 @@
 <template>
 
-  <div class="fixed bottom-0 left-0 right-0 player-bar px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between z-50 gap-2 sm:gap-0 py-2 sm:py-0 h-auto sm:h-[90px]">
+  <div class="fixed bottom-0 left-0 right-0 player-bar px-3 sm:px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between z-50 gap-2 sm:gap-0 py-2 sm:py-0 h-auto sm:h-[90px] mb-2 sm:mb-0">
 
     <!-- Left: Now Playing -->
 

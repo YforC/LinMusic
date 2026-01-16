@@ -518,6 +518,7 @@ body {
   .player-bar {
     border-radius: 16px;
     margin: 0 8px;
+    margin-bottom: 8px;
   }
 
   .song-row,
