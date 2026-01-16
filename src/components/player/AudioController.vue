@@ -42,11 +42,30 @@ let currentLoadingSongId = ''
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
+  // 使用歌曲封面图片
+  let artworkSrc = song.coverUrl || ''
+  let fullArtworkUrl = artworkSrc
+  if (artworkSrc && !artworkSrc.startsWith('http')) {
+    fullArtworkUrl = window.location.origin + artworkSrc
+  }
+
+  const artwork = fullArtworkUrl
+    ? [
+        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    : []
+
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || ''
+      album: song.album || '',
+      artwork
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
@@ -76,6 +95,13 @@ const handleTimeUpdate = () => {
   const position = audioRef.value.currentTime
   if (!Number.isFinite(position)) return
 
+  // 如果 isPlaying 为 true 但音频暂停了，尝试恢复播放
+  if (playerStore.isPlaying && audioRef.value.paused) {
+    audioRef.value.play().catch(e => {
+      console.warn('Resume play failed:', e)
+    })
+  }
+
   playerStore.currentTime = position
   playerStore.updateLyricIndex()
 
@@ -102,6 +128,13 @@ const handleCanPlay = () => {
   playerStore.isLoading = false
   isSwitchingSong = false
   retryCount = 0
+
+  // 如果应该播放但音频暂停了，尝试播放
+  if (playerStore.isPlaying && audioRef.value?.paused) {
+    audioRef.value.play().catch(e => {
+      console.warn('Auto play on canplay failed:', e)
+    })
+  }
 }
 
 const handlePlay = () => {
