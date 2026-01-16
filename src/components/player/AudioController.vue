@@ -54,29 +54,12 @@ let playCheckTimer: number | null = null
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
-  let artworkSrc = song.coverUrl || ''
-  let fullArtworkUrl = artworkSrc
-  if (artworkSrc && !artworkSrc.startsWith('http')) {
-    fullArtworkUrl = window.location.origin + artworkSrc
-  }
-
-  const artwork = fullArtworkUrl
-    ? [
-        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
-      ]
-    : []
-
+  // 不设置 artwork，关闭 iOS 锁屏页点击跳转功能
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || '',
-      artwork
+      album: song.album || ''
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
@@ -438,6 +421,7 @@ async function playSong(isRetry = false) {
   registerMediaSessionHandlers()
 
   playerStore.isLoading = true
+  playerStore.isPlaying = true // 保持播放状态
   if (!isRetry) {
     playerStore.currentTime = 0
   }
@@ -463,7 +447,7 @@ async function playSong(isRetry = false) {
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
-    audioRef.value.pause()
+    // 不要 pause，直接设置新的 src
     audioRef.value.src = url
     audioRef.value.load()
 
@@ -471,7 +455,10 @@ async function playSong(isRetry = false) {
     lastPlayPosition = 0
     lastPlayPositionTime = Date.now()
 
+    // 立即尝试播放，并启动检测
     tryPlay()
+    startPlayCheck()
+
     loadLyrics(song.id, song.platform)
   } catch (error) {
     console.error('Play failed:', error)
