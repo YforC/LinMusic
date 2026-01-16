@@ -1,11 +1,25 @@
 <template>
   <!-- 无 UI 组件，仅处理音频播放 -->
-  <div class="hidden"></div>
+  <audio
+    ref="audioRef"
+    preload="auto"
+    playsinline
+    webkit-playsinline
+    x-webkit-airplay="allow"
+    @timeupdate="handleTimeUpdate"
+    @ended="handleEnded"
+    @loadedmetadata="handleLoadedMetadata"
+    @canplay="handleCanPlay"
+    @play="handlePlay"
+    @pause="handlePause"
+    @error="handleError"
+    @waiting="handleWaiting"
+    @playing="handlePlaying"
+  ></audio>
 </template>
 
 <script setup lang="ts">
-import { watch, onUnmounted, onMounted } from 'vue'
-import { Howl, Howler } from 'howler'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
@@ -15,10 +29,9 @@ import type { Song } from '@/api/types'
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying, volume, playMode, audioQuality } = storeToRefs(playerStore)
 
-let howl: Howl | null = null
-let animationId: number | null = null
+const audioRef = ref<HTMLAudioElement | null>(null)
+
 let lastPositionUpdate = 0
-let audioNode: HTMLAudioElement | null = null
 let endHandled = false
 // 标记是否正在 seek，防止 timeupdate 覆盖目标位置
 let isSeeking = false
@@ -27,9 +40,8 @@ let retryCount = 0
 const MAX_RETRIES = 3
 // 标记是否正在切换歌曲
 let isSwitchingSong = false
-
-Howler.autoSuspend = false
-Howler.autoUnlock = true
+// 当前加载的歌曲 ID，用于防止竞态条件
+let currentLoadingSongId = ''
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -47,14 +59,14 @@ const updateMediaSessionMetadata = (song: Song) => {
 
 const updateMediaSessionPosition = () => {
   if (!('mediaSession' in navigator)) return
-  if (!howl || typeof navigator.mediaSession.setPositionState !== 'function') return
-  const duration = howl.duration()
-  const position = howl.seek() as number
+  if (!audioRef.value || typeof navigator.mediaSession.setPositionState !== 'function') return
+  const duration = audioRef.value.duration
+  const position = audioRef.value.currentTime
   if (!Number.isFinite(duration) || duration === 0 || !Number.isFinite(position)) return
   try {
     navigator.mediaSession.setPositionState({
       duration,
-      playbackRate: howl.rate(),
+      playbackRate: audioRef.value.playbackRate,
       position: Math.min(position, duration)
     })
   } catch (e) {
@@ -62,11 +74,11 @@ const updateMediaSessionPosition = () => {
   }
 }
 
-const handleNativeTimeUpdate = () => {
-  // 如果正在 seek 或切换歌曲，不更新 currentTime
+// 时间更新事件
+const handleTimeUpdate = () => {
   if (isSeeking || isSwitchingSong) return
-  if (!audioNode) return
-  const position = audioNode.currentTime
+  if (!audioRef.value) return
+  const position = audioRef.value.currentTime
   if (!Number.isFinite(position)) return
   playerStore.currentTime = position
   playerStore.updateLyricIndex()
@@ -77,78 +89,61 @@ const handleNativeTimeUpdate = () => {
   }
 }
 
-const handleNativeEnded = () => {
-  handleTrackEnd()
+// 播放结束事件
+const handleEnded = () => {
+  if (endHandled) return
+  endHandled = true
+  handleSongEnd()
 }
 
-const detachAudioNodeListeners = () => {
-  if (!audioNode) return
-  audioNode.removeEventListener('timeupdate', handleNativeTimeUpdate)
-  audioNode.removeEventListener('ended', handleNativeEnded)
-  if (audioNode.dataset.lmusicAttached === 'true' && audioNode.parentElement) {
-    audioNode.parentElement.removeChild(audioNode)
-  }
-  audioNode = null
+// 元数据加载完成
+const handleLoadedMetadata = () => {
+  if (!audioRef.value) return
+  playerStore.duration = audioRef.value.duration || 0
+  updateMediaSessionPosition()
 }
 
-const bindAudioNodeListeners = () => {
-  detachAudioNodeListeners()
-  const node = (howl as any)?._sounds?.[0]?._node as HTMLAudioElement | undefined
-  if (!node) return
-  audioNode = node
-  audioNode.preload = 'auto'
-  audioNode.setAttribute('playsinline', 'true')
-  audioNode.setAttribute('webkit-playsinline', 'true')
-  audioNode.setAttribute('x-webkit-airplay', 'allow')
-  if (!audioNode.parentElement && document.body) {
-    audioNode.dataset.lmusicAttached = 'true'
-    audioNode.style.position = 'fixed'
-    audioNode.style.left = '-9999px'
-    audioNode.style.width = '1px'
-    audioNode.style.height = '1px'
-    audioNode.style.opacity = '0'
-    audioNode.style.pointerEvents = 'none'
-    document.body.appendChild(audioNode)
-  }
-  audioNode.addEventListener('timeupdate', handleNativeTimeUpdate)
-  audioNode.addEventListener('ended', handleNativeEnded)
+// 可以播放
+const handleCanPlay = () => {
+  playerStore.isLoading = false
+  isSwitchingSong = false
+  retryCount = 0
 }
 
-const resumeAudioContext = async () => {
-  if (!Howler.ctx || Howler.ctx.state !== 'suspended') return
-  try {
-    await Howler.ctx.resume()
-  } catch (error) {
-    console.warn('Audio context resume failed:', error)
+// 播放开始
+const handlePlay = () => {
+  playerStore.isPlaying = true
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'playing'
   }
 }
 
-const resumePlaybackFromGesture = () => {
-  if (!currentSong.value || !playerStore.isPlaying) return
-  void resumeAudioContext()
-  if (!howl) {
-    if (!playerStore.isLoading) {
-      playSong()
-    }
-    return
+// 暂停
+const handlePause = () => {
+  // 只有在非 seek 状态下才更新 isPlaying
+  if (!isSeeking) {
+    playerStore.isPlaying = false
   }
-  if (!howl.playing()) {
-    howl.play()
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'paused'
   }
 }
 
-const handleVisibilityChange = () => {
-  if (document.visibilityState === 'visible') {
-    resumePlaybackFromGesture()
-  }
+// 错误处理
+const handleError = () => {
+  console.error('Audio error:', audioRef.value?.error)
+  handleLoadError()
 }
 
-const getSeekBase = () => {
-  if (howl) {
-    const position = howl.seek() as number
-    if (Number.isFinite(position)) return position
-  }
-  return playerStore.currentTime
+// 等待缓冲
+const handleWaiting = () => {
+  playerStore.isLoading = true
+}
+
+// 正在播放（缓冲结束）
+const handlePlaying = () => {
+  playerStore.isLoading = false
+  playerStore.isPlaying = true
 }
 
 const setMediaSessionHandler = (
@@ -165,10 +160,10 @@ const setMediaSessionHandler = (
 const registerMediaSessionHandlers = () => {
   if (!('mediaSession' in navigator)) return
   setMediaSessionHandler('play', () => {
-    if (!playerStore.isPlaying) playerStore.togglePlay()
+    audioRef.value?.play()
   })
   setMediaSessionHandler('pause', () => {
-    if (playerStore.isPlaying) playerStore.togglePlay()
+    audioRef.value?.pause()
   })
   setMediaSessionHandler('previoustrack', () => {
     playerStore.playPrev()
@@ -183,103 +178,88 @@ const registerMediaSessionHandlers = () => {
   })
   setMediaSessionHandler('seekbackward', (details) => {
     const offset = details.seekOffset ?? 10
-    seek(Math.max(0, getSeekBase() - offset))
+    const currentTime = audioRef.value?.currentTime ?? 0
+    seek(Math.max(0, currentTime - offset))
   })
   setMediaSessionHandler('seekforward', (details) => {
     const offset = details.seekOffset ?? 10
-    const duration = playerStore.duration
-    seek(Math.min(duration, getSeekBase() + offset))
+    const currentTime = audioRef.value?.currentTime ?? 0
+    const duration = audioRef.value?.duration ?? 0
+    seek(Math.min(duration, currentTime + offset))
   })
   setMediaSessionHandler('stop', () => {
-    if (playerStore.isPlaying) playerStore.togglePlay()
+    audioRef.value?.pause()
   })
 }
 
 // 跳转到指定时间
 function seek(time: number) {
-  if (!howl) return
+  if (!audioRef.value) return
 
   isSeeking = true
-  const clampedTime = Math.max(0, Math.min(playerStore.duration, time))
+  const duration = audioRef.value.duration || playerStore.duration
+  const clampedTime = Math.max(0, Math.min(duration, time))
 
   // 立即同步 currentTime，避免进度条跳动
   playerStore.currentTime = clampedTime
 
-  // 直接操作底层 audio 元素以获得更精确的 seek
-  if (audioNode) {
-    try {
-      audioNode.currentTime = clampedTime
-    } catch (e) {
-      // 忽略 seek 错误
-    }
-  }
-
   try {
-    howl.seek(clampedTime)
+    audioRef.value.currentTime = clampedTime
   } catch (e) {
-    // 忽略 seek 错误
+    console.warn('Seek error:', e)
   }
 
   updateMediaSessionPosition()
 
-  // 延迟重置 isSeeking，等待 seek 完成
+  // 如果当前是播放状态，确保继续播放
+  if (playerStore.isPlaying && audioRef.value.paused) {
+    audioRef.value.play().catch(e => {
+      console.warn('Play after seek failed:', e)
+    })
+  }
+
+  // 延迟重置 isSeeking
   setTimeout(() => {
     isSeeking = false
-  }, 500)
+  }, 300)
 }
 
 // 注册 seek 处理器
 onMounted(() => {
   playerStore.setSeekHandler(seek)
-  document.addEventListener('touchend', resumePlaybackFromGesture, { passive: true })
-  document.addEventListener('click', resumePlaybackFromGesture)
-  document.addEventListener('visibilitychange', handleVisibilityChange)
   registerMediaSessionHandlers()
+
+  // 设置初始音量
+  if (audioRef.value) {
+    audioRef.value.volume = volume.value
+  }
 })
 
-function handleTrackEnd() {
-  if (endHandled) return
-  endHandled = true
-
-  // 直接调用，不使用 Promise，避免 iOS 后台问题
-  const advanced = handleSongEnd()
-  if (!advanced) {
-    playerStore.isPlaying = false
-  }
-}
-
-// 播放歌曲（带重试机制）
+// 播放歌曲
 async function playSong(isRetry = false) {
-  if (!currentSong.value) return
+  if (!currentSong.value || !audioRef.value) return
 
   const song = currentSong.value
+  const songId = `${song.platform}-${song.id}`
 
   if (!isRetry) {
     retryCount = 0
     isSwitchingSong = true
+    currentLoadingSongId = songId
+  }
+
+  // 检查是否是同一首歌
+  if (currentLoadingSongId !== songId) {
+    return
   }
 
   endHandled = false
-  detachAudioNodeListeners()
   registerMediaSessionHandlers()
-
-  if (howl) {
-    howl.stop()
-    howl.unload()
-    howl = null
-  }
-
-  if (animationId) {
-    cancelAnimationFrame(animationId)
-    animationId = null
-  }
 
   playerStore.isLoading = true
   if (!isRetry) {
     playerStore.currentTime = 0
   }
-
-  void resumeAudioContext()
 
   try {
     updateMediaSessionMetadata(song)
@@ -288,6 +268,7 @@ async function playSong(isRetry = false) {
     void getSongInfo(song.id, song.platform)
       .then((info) => {
         if (!info) return
+        if (currentLoadingSongId !== songId) return
         if (!song.coverUrl) {
           song.coverUrl = info.pic || getCoverUrl(song.id, song.platform)
         }
@@ -302,62 +283,36 @@ async function playSong(isRetry = false) {
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
-    howl = new Howl({
-      src: [url],
-      html5: true,
-      format: ['mp3', 'flac', 'wav', 'ogg'],
-      volume: volume.value,
-      preload: true,
-      onload: () => {
-        playerStore.duration = howl?.duration() || 0
-        playerStore.isLoading = false
-        isSwitchingSong = false
-        retryCount = 0
-        updateMediaSessionPosition()
-        bindAudioNodeListeners()
-      },
-      onplay: () => {
-        bindAudioNodeListeners()
-        playerStore.isPlaying = true
-        isSwitchingSong = false
-        updateProgress()
-      },
-      onpause: () => {
-        playerStore.isPlaying = false
-        if (animationId) {
-          cancelAnimationFrame(animationId)
-          animationId = null
-        }
-      },
-      onstop: () => {
-        playerStore.isPlaying = false
-        if (animationId) {
-          cancelAnimationFrame(animationId)
-          animationId = null
-        }
-      },
-      onend: () => {
-        if (animationId) {
-          cancelAnimationFrame(animationId)
-          animationId = null
-        }
-        handleTrackEnd()
-      },
-      onloaderror: (id, error) => {
-        console.error('Load error:', id, error)
-        handleLoadError()
-      },
-      onplayerror: (id, error) => {
-        console.error('Play error:', id, error)
-        handlePlayError()
-      }
-    })
+    // 停止当前播放
+    audioRef.value.pause()
+    audioRef.value.currentTime = 0
 
-    howl.play()
+    // 设置新的音频源
+    audioRef.value.src = url
+
+    // 加载并播放
+    audioRef.value.load()
+
+    // 尝试播放
+    try {
+      await audioRef.value.play()
+    } catch (playError: any) {
+      // 如果是用户交互问题，等待用户交互
+      if (playError.name === 'NotAllowedError') {
+        console.warn('Playback requires user interaction')
+        playerStore.isPlaying = true // 保持状态，等待用户交互后恢复
+      } else {
+        throw playError
+      }
+    }
+
+    // 加载歌词
     loadLyrics(song.id, song.platform)
   } catch (error) {
     console.error('Play failed:', error)
-    handleLoadError()
+    if (currentLoadingSongId === songId) {
+      handleLoadError()
+    }
   }
 }
 
@@ -389,79 +344,47 @@ function handleLoadError() {
   }
 }
 
-// 处理播放错误
-function handlePlayError() {
-  // 尝试解锁并重新播放
-  howl?.once('unlock', () => {
-    howl?.play()
-  })
-
-  // 如果 3 秒后还没播放，尝试重新加载
-  setTimeout(() => {
-    if (howl && !howl.playing() && playerStore.isPlaying) {
-      handleLoadError()
-    }
-  }, 3000)
-}
-
-function updateProgress() {
-  if (howl && playerStore.isPlaying) {
-    // 如果正在 seek 或切换歌曲，不要覆盖 currentTime
-    if (!isSeeking && !isSwitchingSong) {
-      const pos = howl.seek() as number
-      if (Number.isFinite(pos)) {
-        playerStore.currentTime = pos
-      }
-    }
-    playerStore.updateLyricIndex()
-    const now = Date.now()
-    if (now - lastPositionUpdate > 1000) {
-      updateMediaSessionPosition()
-      lastPositionUpdate = now
-    }
-    animationId = requestAnimationFrame(updateProgress)
-  }
-}
-
 // 处理歌曲结束后的播放逻辑
-function handleSongEnd(): boolean {
+function handleSongEnd() {
   const mode = playMode.value
   const playlist = playerStore.playlist
   const currentIndex = playerStore.currentIndex
 
-  if (!playlist.length) return false
-
-  // 同步恢复 audio context（不使用 await，避免 iOS 后台问题）
-  void resumeAudioContext()
+  if (!playlist.length) {
+    playerStore.isPlaying = false
+    return
+  }
 
   switch (mode) {
     case 'single':
       // 单曲循环
-      if (howl) {
+      if (audioRef.value) {
         endHandled = false
-        howl.seek(0)
-        howl.play()
-        return true
+        audioRef.value.currentTime = 0
+        audioRef.value.play().catch(e => {
+          console.warn('Single loop play failed:', e)
+        })
       }
-      return false
+      break
 
     case 'loop':
       // 列表循环
       playerStore.playNext()
-      return true
+      break
 
     case 'shuffle':
       // 随机播放
       playerStore.playNext()
-      return true
+      break
 
     default:
       // 顺序播放
       if (currentIndex < playlist.length - 1) {
         playerStore.playNext()
-        return true
+      } else {
+        playerStore.isPlaying = false
       }
-      return false
+      break
   }
 }
 
@@ -479,27 +402,26 @@ async function loadLyrics(id: string, platform: string) {
 
 // 监听播放状态变化
 watch(isPlaying, (playing) => {
-  if (!howl) return
+  if (!audioRef.value) return
 
   if (playing) {
-    void resumeAudioContext()
-    if (!howl.playing()) {
-      howl.play()
+    if (audioRef.value.paused && audioRef.value.src) {
+      audioRef.value.play().catch(e => {
+        console.warn('Play failed:', e)
+      })
     }
   } else {
-    if (howl.playing()) {
-      howl.pause()
+    if (!audioRef.value.paused) {
+      audioRef.value.pause()
     }
-  }
-
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
   }
 }, { flush: 'sync' })
 
 // 监听音量变化
 watch(volume, (newVolume) => {
-  howl?.volume(newVolume)
+  if (audioRef.value) {
+    audioRef.value.volume = newVolume
+  }
 })
 
 // 监听当前歌曲变化
@@ -511,16 +433,9 @@ watch(currentSong, (newSong, oldSong) => {
 
 // 清理
 onUnmounted(() => {
-  document.removeEventListener('touchend', resumePlaybackFromGesture)
-  document.removeEventListener('click', resumePlaybackFromGesture)
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
-  detachAudioNodeListeners()
-  if (howl) {
-    howl.unload()
-    howl = null
-  }
-  if (animationId) {
-    cancelAnimationFrame(animationId)
+  if (audioRef.value) {
+    audioRef.value.pause()
+    audioRef.value.src = ''
   }
 })
 </script>
