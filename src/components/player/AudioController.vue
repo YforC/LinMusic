@@ -21,13 +21,24 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
+import { useAppStore } from '@/stores/app'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
 import { storeToRefs } from 'pinia'
 import type { Song } from '@/api/types'
 
 const playerStore = usePlayerStore()
+const appStore = useAppStore()
 const { currentSong, isPlaying, volume, playMode, audioQuality } = storeToRefs(playerStore)
+
+// 同步 appStore 的音质设置到 playerStore
+watch(
+  () => appStore.settings.audioQuality,
+  (newQuality) => {
+    playerStore.audioQuality = newQuality
+  },
+  { immediate: true }
+)
 
 const audioRef = ref<HTMLAudioElement | null>(null)
 
