@@ -361,6 +361,7 @@ function handleSongEnd() {
 
   // 标记正在自动切歌
   isAutoNexting = true
+  isSwitchingSong = true
 
   switch (mode) {
     case 'single':
@@ -370,24 +371,96 @@ function handleSongEnd() {
         audioRef.value.play().catch(e => {
           console.warn('Single loop play failed:', e)
           isAutoNexting = false
+          isSwitchingSong = false
         })
       }
       break
 
     case 'loop':
     case 'shuffle':
-      playerStore.playNext()
+      playNextDirectly()
       break
 
     default:
       if (currentIndex < playlist.length - 1) {
-        playerStore.playNext()
+        playNextDirectly()
       } else {
         isAutoNexting = false
+        isSwitchingSong = false
         playerStore.isPlaying = false
       }
       break
   }
+}
+
+// 直接播放下一首（用于后台自动切歌，保持音频会话连续）
+function playNextDirectly() {
+  if (!audioRef.value) return
+
+  const playlist = playerStore.playlist
+  const currentIndex = playerStore.currentIndex
+
+  let nextIndex: number
+  if (playMode.value === 'shuffle') {
+    const count = playlist.length
+    if (count <= 1) {
+      nextIndex = 0
+    } else {
+      nextIndex = Math.floor(Math.random() * count)
+      if (nextIndex === currentIndex) {
+        nextIndex = (currentIndex + 1) % count
+      }
+    }
+  } else {
+    nextIndex = (currentIndex + 1) % playlist.length
+  }
+
+  const nextSong = playlist[nextIndex]
+  if (!nextSong) {
+    isAutoNexting = false
+    isSwitchingSong = false
+    playerStore.isPlaying = false
+    return
+  }
+
+  // 更新 store 状态（不触发 watch，因为我们直接播放）
+  const songId = `${nextSong.platform}-${nextSong.id}`
+  currentLoadingSongId = songId
+  endHandled = false
+
+  playerStore.currentIndex = nextIndex
+  playerStore.currentSong = nextSong
+  playerStore.currentTime = 0
+  playerStore.duration = 0
+  playerStore.isLoading = true
+
+  // 更新 MediaSession
+  updateMediaSessionMetadata(nextSong)
+  registerMediaSessionHandlers()
+
+  // 异步获取歌曲信息
+  void getSongInfo(nextSong.id, nextSong.platform)
+    .then((info) => {
+      if (!info || currentLoadingSongId !== songId) return
+      if (!nextSong.coverUrl) {
+        nextSong.coverUrl = info.pic || getCoverUrl(nextSong.id, nextSong.platform)
+      }
+      if (!nextSong.album) {
+        nextSong.album = info.album
+      }
+      updateMediaSessionMetadata(nextSong)
+    })
+    .catch(() => {})
+
+  // 直接设置 src 并播放
+  const url = getPlayUrl(nextSong.id, nextSong.platform, audioQuality.value)
+  audioRef.value.src = url
+  audioRef.value.load()
+  audioRef.value.play().catch(e => {
+    console.warn('Play next directly failed:', e)
+  })
+
+  loadLyrics(nextSong.id, nextSong.platform)
 }
 
 async function loadLyrics(id: string, platform: string) {
