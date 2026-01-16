@@ -38,15 +38,34 @@ let retryCount = 0
 const MAX_RETRIES = 3
 let isSwitchingSong = false
 let currentLoadingSongId = ''
+let shouldPlayOnCanPlay = false
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
+
+  let artworkSrc = song.coverUrl || ''
+  let fullArtworkUrl = artworkSrc
+  if (artworkSrc && !artworkSrc.startsWith('http')) {
+    fullArtworkUrl = window.location.origin + artworkSrc
+  }
+
+  const artwork = fullArtworkUrl
+    ? [
+        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    : []
 
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || ''
+      album: song.album || '',
+      artwork
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
@@ -102,6 +121,14 @@ const handleCanPlay = () => {
   playerStore.isLoading = false
   isSwitchingSong = false
   retryCount = 0
+
+  // 如果需要在 canplay 时播放（自动切歌场景）
+  if (shouldPlayOnCanPlay && audioRef.value) {
+    shouldPlayOnCanPlay = false
+    audioRef.value.play().catch(e => {
+      console.warn('Play on canplay failed:', e)
+    })
+  }
 }
 
 const handlePlay = () => {
@@ -282,13 +309,22 @@ async function playSong(isRetry = false) {
     audioRef.value.src = url
     audioRef.value.load()
 
+    // 设置标志，如果 play() 失败，在 canplay 时重试
+    shouldPlayOnCanPlay = true
+
     try {
       await audioRef.value.play()
+      shouldPlayOnCanPlay = false
     } catch (playError: any) {
       if (playError.name === 'NotAllowedError') {
         console.warn('Playback requires user interaction')
+        shouldPlayOnCanPlay = false
         playerStore.isPlaying = true
-      } else if (playError.name !== 'AbortError') {
+      } else if (playError.name === 'AbortError') {
+        // 播放被中断，保持 shouldPlayOnCanPlay = true，等待 canplay 事件
+        console.warn('Play aborted, will retry on canplay')
+      } else {
+        shouldPlayOnCanPlay = false
         throw playError
       }
     }
