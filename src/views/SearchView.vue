@@ -177,7 +177,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { aggregateSearch, searchSongs, type Platform } from '@/api/music'
+import { aggregateSearch, searchSongs, type Platform, type SearchResult } from '@/api/music'
 import { getPlatformName, normalizeImageUrl } from '@/utils/format'
 import { globalToast } from '@/composables/useToast'
 import SongMenu from '@/components/music/SongMenu.vue'
@@ -253,7 +253,7 @@ const handleSearch = async () => {
 
   isLoading.value = true
   try {
-    let results = []
+    let results: SearchResult[] = []
     if (currentPlatform.value === 'all') {
       try {
         results = await aggregateSearch(keyword, { timeoutMs: 12000, throwOnError: true })

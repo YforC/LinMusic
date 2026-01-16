@@ -3,7 +3,7 @@ import { ref } from 'vue'
 export interface Toast {
   id: number
   message: string
-  type: 'success' | 'error' | 'info'
+  type: 'success' | 'error' | 'info' | 'warning'
   duration: number
 }
 
@@ -33,6 +33,7 @@ export function useToast() {
   const success = (message: string, duration?: number) => showToast(message, 'success', duration)
   const error = (message: string, duration?: number) => showToast(message, 'error', duration)
   const info = (message: string, duration?: number) => showToast(message, 'info', duration)
+  const warning = (message: string, duration?: number) => showToast(message, 'warning', duration)
 
   return {
     toasts,
@@ -40,7 +41,8 @@ export function useToast() {
     removeToast,
     success,
     error,
-    info
+    info,
+    warning
   }
 }
 
