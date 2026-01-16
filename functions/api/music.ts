@@ -62,36 +62,69 @@ export async function onRequest(context: RequestContext): Promise<Response> {
           // QQ 音乐：代理音频流（使用 HTTP URL）
           const audioHeaders = new Headers()
           audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+          audioHeaders.set('accept', '*/*')
+          audioHeaders.set('accept-language', 'zh-CN,zh;q=0.9,en;q=0.8')
+          audioHeaders.set('referer', 'https://y.qq.com/')
           if (range) audioHeaders.set('range', range)
 
           // 确保使用 HTTP（QQ 音乐 HTTPS 会 403）
           const httpUrl = location.replace(/^https:\/\//, 'http://')
 
-          const audioResponse = await fetch(httpUrl, {
-            method: request.method,
-            headers: audioHeaders
-          })
+          try {
+            const audioResponse = await fetch(httpUrl, {
+              method: request.method,
+              headers: audioHeaders
+            })
 
-          const responseHeaders = new Headers()
-          responseHeaders.set('Access-Control-Allow-Origin', '*')
-          responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-          responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
-          responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
+            // 检查响应是否成功
+            if (!audioResponse.ok) {
+              return new Response(JSON.stringify({
+                error: 'Failed to fetch QQ audio',
+                status: audioResponse.status,
+                statusText: audioResponse.statusText,
+                url: httpUrl
+              }), {
+                status: audioResponse.status,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Access-Control-Allow-Origin': '*'
+                }
+              })
+            }
 
-          const contentLength = audioResponse.headers.get('content-length')
-          if (contentLength) responseHeaders.set('Content-Length', contentLength)
+            const responseHeaders = new Headers()
+            responseHeaders.set('Access-Control-Allow-Origin', '*')
+            responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+            responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
+            responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
 
-          const contentRange = audioResponse.headers.get('content-range')
-          if (contentRange) responseHeaders.set('Content-Range', contentRange)
+            const contentLength = audioResponse.headers.get('content-length')
+            if (contentLength) responseHeaders.set('Content-Length', contentLength)
 
-          const acceptRanges = audioResponse.headers.get('accept-ranges')
-          if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
+            const contentRange = audioResponse.headers.get('content-range')
+            if (contentRange) responseHeaders.set('Content-Range', contentRange)
 
-          return new Response(audioResponse.body, {
-            status: audioResponse.status,
-            statusText: audioResponse.statusText,
-            headers: responseHeaders
-          })
+            const acceptRanges = audioResponse.headers.get('accept-ranges')
+            if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
+
+            return new Response(audioResponse.body, {
+              status: audioResponse.status,
+              statusText: audioResponse.statusText,
+              headers: responseHeaders
+            })
+          } catch (fetchError: any) {
+            return new Response(JSON.stringify({
+              error: 'Fetch error for QQ audio',
+              message: fetchError.message || 'Unknown error',
+              url: httpUrl
+            }), {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              }
+            })
+          }
         } else {
           // 其他平台：直接跟随重定向并代理音频流
           const audioHeaders = new Headers()
