@@ -52,13 +52,32 @@ let playRetryTimer: number | null = null
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
-  // 不设置 artwork，避免 iOS 锁屏页点击跳转问题
+  // 使用歌曲封面图片
+  let artworkSrc = song.coverUrl || ''
+
+  // 确保 artwork URL 是绝对路径
+  let fullArtworkUrl = artworkSrc
+  if (artworkSrc && !artworkSrc.startsWith('http')) {
+    fullArtworkUrl = window.location.origin + artworkSrc
+  }
+
+  const artwork = fullArtworkUrl
+    ? [
+        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    : []
+
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || ''
-      // 移除 artwork，防止 iOS 点击跳转
+      album: song.album || '',
+      artwork
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
