@@ -102,7 +102,11 @@ export function normalizeImageUrl(url?: string | null): string | undefined {
   if (normalized.startsWith('http://')) normalized = `https://${normalized.slice(7)}`
 
   // 酷我音乐图片服务器 SSL 证书无效，需要通过代理
-  if (normalized.includes('kwcdn.kuwo.cn') || normalized.includes('star.kuwo.cn')) {
+  if (
+    normalized.includes('kwcdn.kuwo.cn')
+    || normalized.includes('star.kuwo.cn')
+    || (normalized.includes('kwimg') && normalized.includes('kuwo.cn'))
+  ) {
     return `/api/image-proxy?url=${encodeURIComponent(normalized)}`
   }
 

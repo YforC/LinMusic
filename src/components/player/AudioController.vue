@@ -25,7 +25,7 @@ import { useAppStore } from '@/stores/app'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl, findAlternativeSong } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
 import { storeToRefs } from 'pinia'
-import type { Song } from '@/api/types'
+import type { Song, AudioQuality } from '@/api/types'
 
 const playerStore = usePlayerStore()
 const appStore = useAppStore()
@@ -51,6 +51,14 @@ let isSwitchingSong = false
 let currentLoadingSongId = ''
 let isAutoNexting = false
 let hasTriedFallback = false
+const QUALITY_FALLBACK_ORDER: AudioQuality[] = ['flac24bit', 'flac', '320k', '128k']
+let playbackQuality: AudioQuality = '320k'
+
+const getNextLowerQuality = (quality: AudioQuality): AudioQuality | null => {
+  const currentIndex = QUALITY_FALLBACK_ORDER.indexOf(quality)
+  if (currentIndex < 0 || currentIndex >= QUALITY_FALLBACK_ORDER.length - 1) return null
+  return QUALITY_FALLBACK_ORDER[currentIndex + 1]
+}
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -277,6 +285,7 @@ async function playSong(isRetry = false) {
   if (!isRetry) {
     retryCount = 0
     hasTriedFallback = false
+    playbackQuality = audioQuality.value
     isSwitchingSong = true
     currentLoadingSongId = songId
   }
@@ -312,7 +321,7 @@ async function playSong(isRetry = false) {
         console.error('Get song info failed:', error)
       })
 
-    const url = getPlayUrl(song.id, song.platform, audioQuality.value)
+    const url = getPlayUrl(song.id, song.platform, playbackQuality)
 
     audioRef.value.src = url
     audioRef.value.load()
@@ -349,6 +358,19 @@ function handleLoadError() {
         playSong(true)
       }
     }, 1000 * retryCount)
+  } else if (currentSong.value) {
+    const nextQuality = getNextLowerQuality(playbackQuality)
+    if (nextQuality) {
+      playbackQuality = nextQuality
+      retryCount = 0
+      console.log(`Retrying with lower quality: ${playbackQuality}`)
+      setTimeout(() => {
+        if (currentSong.value) {
+          playSong(true)
+        }
+      }, 800)
+      return
+    }
   } else if (!hasTriedFallback && currentSong.value) {
     // 重试次数用完后，尝试从其他平台换源
     hasTriedFallback = true
@@ -493,6 +515,7 @@ function playNextDirectly() {
   playerStore.currentTime = 0
   playerStore.duration = 0
   playerStore.isLoading = true
+  playbackQuality = audioQuality.value
 
   // 更新 MediaSession
   updateMediaSessionMetadata(nextSong)
@@ -513,7 +536,7 @@ function playNextDirectly() {
     .catch(() => {})
 
   // 直接设置 src 并播放
-  const url = getPlayUrl(nextSong.id, nextSong.platform, audioQuality.value)
+  const url = getPlayUrl(nextSong.id, nextSong.platform, playbackQuality)
   audioRef.value.src = url
   audioRef.value.load()
   audioRef.value.play().catch(e => {

@@ -8,6 +8,10 @@ const ALLOWED_DOMAINS = [
   'img2.kwcdn.kuwo.cn',
   'img3.kwcdn.kuwo.cn',
   'img4.kwcdn.kuwo.cn',
+  'kwimg1.kuwo.cn',
+  'kwimg2.kuwo.cn',
+  'kwimg3.kuwo.cn',
+  'kwimg4.kuwo.cn',
   'kwcdn.kuwo.cn',
   'star.kuwo.cn'
 ]
