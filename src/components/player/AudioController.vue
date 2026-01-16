@@ -197,8 +197,27 @@ const setMediaSessionHandler = (
 const registerMediaSessionHandlers = () => {
   if (!('mediaSession' in navigator)) return
 
-  setMediaSessionHandler('play', () => {
-    audioRef.value?.play()
+  setMediaSessionHandler('play', async () => {
+    if (!audioRef.value) return
+
+    try {
+      await audioRef.value.play()
+    } catch (e: any) {
+      console.warn('MediaSession play failed:', e?.name)
+      // iOS 后台暂停后可能需要重新加载
+      if (currentSong.value && audioRef.value) {
+        const url = getPlayUrl(currentSong.value.id, currentSong.value.platform, audioQuality.value)
+        const currentTime = playerStore.currentTime
+        audioRef.value.src = url
+        audioRef.value.load()
+        audioRef.value.currentTime = currentTime
+        try {
+          await audioRef.value.play()
+        } catch (e2) {
+          console.warn('MediaSession play retry failed:', e2)
+        }
+      }
+    }
   })
 
   setMediaSessionHandler('pause', () => {
@@ -504,14 +523,29 @@ async function loadLyrics(id: string, platform: string) {
   }
 }
 
-watch(isPlaying, (playing) => {
+watch(isPlaying, async (playing) => {
   if (!audioRef.value) return
 
   if (playing) {
     if (audioRef.value.paused && audioRef.value.src) {
-      audioRef.value.play().catch(e => {
-        console.warn('Play failed:', e)
-      })
+      try {
+        await audioRef.value.play()
+      } catch (e: any) {
+        console.warn('Play failed:', e?.name)
+        // iOS 后台暂停后可能需要重新加载
+        if (currentSong.value) {
+          const url = getPlayUrl(currentSong.value.id, currentSong.value.platform, audioQuality.value)
+          const currentTime = playerStore.currentTime
+          audioRef.value.src = url
+          audioRef.value.load()
+          audioRef.value.currentTime = currentTime
+          try {
+            await audioRef.value.play()
+          } catch (e2) {
+            console.warn('Play retry failed:', e2)
+          }
+        }
+      }
     }
   } else {
     if (!audioRef.value.paused) {
