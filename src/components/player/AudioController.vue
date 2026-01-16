@@ -96,8 +96,11 @@ const handleTimeUpdate = () => {
   const position = audioRef.value.currentTime
   if (!Number.isFinite(position)) return
 
-  playerStore.currentTime = position
-  playerStore.updateLyricIndex()
+  // 只有当音频真正在播放时才更新进度
+  if (!audioRef.value.paused) {
+    playerStore.currentTime = position
+    playerStore.updateLyricIndex()
+  }
 
   const now = Date.now()
   if (now - lastPositionUpdate > 1000) {
@@ -445,15 +448,18 @@ async function playNextSongDirectly() {
   playerStore.currentIndex = nextIndex
   playerStore.currentSong = nextSong
   playerStore.currentTime = 0
+  playerStore.duration = 0
 
   const songId = `${nextSong.platform}-${nextSong.id}`
   currentLoadingSongId = songId
   endHandled = false
   isSwitchingSong = true
   shouldPlayOnCanPlay = true
+  playerStore.isLoading = true
 
   // 更新 MediaSession
   updateMediaSessionMetadata(nextSong)
+  registerMediaSessionHandlers()
 
   // 获取歌曲信息（异步，不阻塞播放）
   void getSongInfo(nextSong.id, nextSong.platform)
@@ -469,14 +475,16 @@ async function playNextSongDirectly() {
     })
     .catch(() => {})
 
-  // 直接设置新的 src 并播放，保持音频会话连续
+  // 直接设置新的 src 并播放
   const url = getPlayUrl(nextSong.id, nextSong.platform, audioQuality.value)
   audioRef.value.src = url
+  audioRef.value.load()
 
   try {
     await audioRef.value.play()
     shouldPlayOnCanPlay = false
     isSwitchingSong = false
+    playerStore.isLoading = false
   } catch (e: any) {
     console.warn('Direct play next failed:', e?.name)
     // 保持 shouldPlayOnCanPlay = true，等待 canplay 事件
