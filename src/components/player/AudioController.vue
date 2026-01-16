@@ -42,32 +42,14 @@ let currentLoadingSongId = ''
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
-  let artworkSrc = song.coverUrl || ''
-  let fullArtworkUrl = artworkSrc
-  if (artworkSrc && !artworkSrc.startsWith('http')) {
-    fullArtworkUrl = window.location.origin + artworkSrc
-  }
-
-  const artwork = fullArtworkUrl
-    ? [
-        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
-      ]
-    : []
-
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || '',
-      artwork
+      album: song.album || ''
     })
   } catch (e) {
-    // ignore
+    console.warn('Failed to set media session metadata:', e)
   }
 }
 
@@ -167,7 +149,7 @@ const setMediaSessionHandler = (
   try {
     navigator.mediaSession.setActionHandler(action, handler)
   } catch (error) {
-    // ignore
+    console.warn(`MediaSession action not supported: ${action}`, error)
   }
 }
 
@@ -228,7 +210,7 @@ function seek(time: number) {
   try {
     audioRef.value.currentTime = clampedTime
   } catch (e) {
-    // ignore
+    console.warn('Seek error:', e)
   }
 
   updateMediaSessionPosition()
@@ -236,7 +218,9 @@ function seek(time: number) {
   setTimeout(() => {
     isSeeking = false
     if (wasPlaying && audioRef.value?.paused) {
-      audioRef.value.play().catch(() => {})
+      audioRef.value.play().catch(e => {
+        console.warn('Play after seek failed:', e)
+      })
     }
   }, 100)
 }
@@ -289,35 +273,29 @@ async function playSong(isRetry = false) {
         }
         updateMediaSessionMetadata(song)
       })
-      .catch(() => {})
+      .catch((error) => {
+        console.error('Get song info failed:', error)
+      })
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
     audioRef.value.src = url
     audioRef.value.load()
 
-    // 简单直接地尝试播放
-    await audioRef.value.play()
+    try {
+      await audioRef.value.play()
+    } catch (playError: any) {
+      if (playError.name === 'NotAllowedError') {
+        console.warn('Playback requires user interaction')
+        playerStore.isPlaying = true
+      } else if (playError.name !== 'AbortError') {
+        throw playError
+      }
+    }
 
     loadLyrics(song.id, song.platform)
-  } catch (error: any) {
-    console.warn('Play error:', error?.name, error?.message)
-
-    // NotAllowedError: 自动播放被阻止，这是正常的，等待用户交互
-    if (error?.name === 'NotAllowedError') {
-      playerStore.isPlaying = true
-      playerStore.isLoading = false
-      isSwitchingSong = false
-      loadLyrics(song.id, song.platform)
-      return
-    }
-
-    // AbortError: 播放被中断，可能是快速切歌，忽略
-    if (error?.name === 'AbortError') {
-      return
-    }
-
-    // 其他错误，尝试重试
+  } catch (error) {
+    console.error('Play failed:', error)
     if (currentLoadingSongId === songId) {
       handleLoadError()
     }
@@ -330,12 +308,14 @@ function handleLoadError() {
 
   if (retryCount < MAX_RETRIES) {
     retryCount++
+    console.log(`Retrying... (${retryCount}/${MAX_RETRIES})`)
     setTimeout(() => {
       if (currentSong.value) {
         playSong(true)
       }
     }, 1000 * retryCount)
   } else {
+    console.log('Max retries reached, trying next song')
     retryCount = 0
     const playlist = playerStore.playlist
     const currentIndex = playerStore.currentIndex
@@ -362,7 +342,9 @@ function handleSongEnd() {
       if (audioRef.value) {
         endHandled = false
         audioRef.value.currentTime = 0
-        audioRef.value.play().catch(() => {})
+        audioRef.value.play().catch(e => {
+          console.warn('Single loop play failed:', e)
+        })
       }
       break
 
@@ -390,6 +372,7 @@ async function loadLyrics(id: string, platform: string) {
     const lyrics = parseLrc(lrcText)
     playerStore.setLyrics(lyrics)
   } catch (error) {
+    console.error('Load lyrics failed:', error)
     playerStore.setLyrics([])
   }
 }
@@ -399,7 +382,9 @@ watch(isPlaying, (playing) => {
 
   if (playing) {
     if (audioRef.value.paused && audioRef.value.src) {
-      audioRef.value.play().catch(() => {})
+      audioRef.value.play().catch(e => {
+        console.warn('Play failed:', e)
+      })
     }
   } else {
     if (!audioRef.value.paused) {
