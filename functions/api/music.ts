@@ -54,12 +54,12 @@ export async function onRequest(context: RequestContext): Promise<Response> {
     if (upstream.status === 302 || upstream.status === 301) {
       const location = upstream.headers.get('location')
       if (location) {
-        // QQ 音乐的 HTTPS 会返回 403，需要使用 HTTP 并代理流
-        // 其他平台可以尝试 HTTPS 重定向
+        // QQ 音乐需要特殊处理：添加正确的请求头（referer 等）
+        // 其他平台可以直接跟随重定向
         const isQQ = source === 'qq' || location.includes('qqmusic.qq.com')
 
         if (isQQ) {
-          // QQ 音乐：代理音频流（使用 HTTP URL）
+          // QQ 音乐：代理音频流
           const audioHeaders = new Headers()
           audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
           audioHeaders.set('accept', '*/*')
@@ -67,11 +67,11 @@ export async function onRequest(context: RequestContext): Promise<Response> {
           audioHeaders.set('referer', 'https://y.qq.com/')
           if (range) audioHeaders.set('range', range)
 
-          // 确保使用 HTTP（QQ 音乐 HTTPS 会 403）
-          const httpUrl = location.replace(/^https:\/\//, 'http://')
+          // 优先使用 HTTPS（添加正确的请求头后 HTTPS 也可以工作）
+          const httpsUrl = location.replace(/^http:\/\//, 'https://')
 
           try {
-            const audioResponse = await fetch(httpUrl, {
+            const audioResponse = await fetch(httpsUrl, {
               method: request.method,
               headers: audioHeaders
             })
@@ -82,7 +82,7 @@ export async function onRequest(context: RequestContext): Promise<Response> {
                 error: 'Failed to fetch QQ audio',
                 status: audioResponse.status,
                 statusText: audioResponse.statusText,
-                url: httpUrl
+                url: httpsUrl
               }), {
                 status: audioResponse.status,
                 headers: {
@@ -116,7 +116,7 @@ export async function onRequest(context: RequestContext): Promise<Response> {
             return new Response(JSON.stringify({
               error: 'Fetch error for QQ audio',
               message: fetchError.message || 'Unknown error',
-              url: httpUrl
+              url: httpsUrl
             }), {
               status: 500,
               headers: {
