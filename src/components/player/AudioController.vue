@@ -33,6 +33,7 @@ let lastPositionUpdate = 0
 let endHandled = false
 let currentLoadingSongId = ''
 let pendingSeekTime = -1
+let isLoadingNextSong = false
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -144,6 +145,7 @@ const handleLoadedMetadata = () => {
 
 const handleCanPlayThrough = () => {
   playerStore.isLoading = false
+  isLoadingNextSong = false
 
   // 如果应该播放但当前暂停，尝试播放
   if (playerStore.isPlaying && audioRef.value?.paused) {
@@ -159,14 +161,10 @@ const handlePlay = () => {
 }
 
 const handlePause = () => {
-  // 只有在不是切歌过程中才更新状态
-  if (currentLoadingSongId === '' ||
-      (currentSong.value && currentLoadingSongId === `${currentSong.value.platform}-${currentSong.value.id}`)) {
-    // 检查是否真的应该暂停
-    if (!playerStore.isLoading) {
-      playerStore.isPlaying = false
-    }
-  }
+  // 切歌过程中不更新状态
+  if (isLoadingNextSong) return
+
+  playerStore.isPlaying = false
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'paused'
   }
@@ -218,6 +216,8 @@ const registerMediaSessionHandlers = () => {
 async function resumePlayback() {
   if (!audioRef.value || !currentSong.value) return
 
+  playerStore.isPlaying = true
+
   // 先尝试直接播放
   try {
     await audioRef.value.play()
@@ -232,16 +232,19 @@ async function resumePlayback() {
 
   pendingSeekTime = savedTime
   playerStore.isLoading = true
+  isLoadingNextSong = true
 
   audioRef.value.src = url
   audioRef.value.load()
 
-  // 等待加载完成后播放
-  const onCanPlay = () => {
-    audioRef.value?.removeEventListener('canplaythrough', onCanPlay)
-    audioRef.value?.play().catch(() => {})
+  try {
+    await audioRef.value.play()
+    isLoadingNextSong = false
+    playerStore.isLoading = false
+  } catch (e) {
+    console.warn('Reload play failed:', e)
+    // 等待 canplaythrough 事件
   }
-  audioRef.value.addEventListener('canplaythrough', onCanPlay)
 }
 
 // 直接播放下一首（用于后台自动切歌）
@@ -272,6 +275,9 @@ async function playNextDirectly() {
     return
   }
 
+  // 标记正在切歌
+  isLoadingNextSong = true
+
   // 更新状态
   const songId = `${nextSong.platform}-${nextSong.id}`
   currentLoadingSongId = songId
@@ -285,6 +291,7 @@ async function playNextDirectly() {
 
   // 更新 MediaSession
   updateMediaSessionMetadata(nextSong)
+  registerMediaSessionHandlers()
 
   // 异步获取歌曲信息
   void getSongInfo(nextSong.id, nextSong.platform)
@@ -307,6 +314,8 @@ async function playNextDirectly() {
 
   try {
     await audioRef.value.play()
+    isLoadingNextSong = false
+    playerStore.isLoading = false
   } catch (e) {
     console.warn('Play next failed:', e)
     // 播放失败，等待 canplaythrough 事件
