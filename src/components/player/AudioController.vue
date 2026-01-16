@@ -8,6 +8,7 @@
     @timeupdate="handleTimeUpdate"
     @ended="handleEnded"
     @loadedmetadata="handleLoadedMetadata"
+    @loadeddata="handleLoadedData"
     @canplay="handleCanPlay"
     @canplaythrough="handleCanPlayThrough"
     @play="handlePlay"
@@ -17,6 +18,7 @@
     @playing="handlePlaying"
     @seeked="handleSeeked"
     @loadstart="handleLoadStart"
+    @stalled="handleStalled"
   ></audio>
 </template>
 
@@ -124,7 +126,8 @@ const handleCanPlay = () => {
   isSwitchingSong = false
   retryCount = 0
 
-  if (pendingPlay && audioRef.value) {
+  // 如果需要播放且当前是暂停状态，尝试播放
+  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
     audioRef.value.play()
       .then(() => {
         pendingPlay = false
@@ -181,7 +184,8 @@ const handleSeeked = () => {
 
 const handleCanPlayThrough = () => {
   // 移动端可能在 canplaythrough 时更可靠
-  if (pendingPlay && audioRef.value && audioRef.value.paused) {
+  // 如果需要播放且当前是暂停状态，尝试播放
+  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
     audioRef.value.play()
       .then(() => {
         pendingPlay = false
@@ -194,6 +198,27 @@ const handleCanPlayThrough = () => {
 
 const handleLoadStart = () => {
   playerStore.isLoading = true
+}
+
+const handleLoadedData = () => {
+  // loadeddata 事件在第一帧数据加载完成后触发
+  // 这是 iOS 后台播放的关键时机
+  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
+    audioRef.value.play()
+      .then(() => {
+        pendingPlay = false
+      })
+      .catch(e => {
+        console.warn('Play on loadeddata failed:', e)
+      })
+  }
+}
+
+const handleStalled = () => {
+  // 音频停滞时，如果应该播放，尝试恢复
+  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
+    audioRef.value.play().catch(() => {})
+  }
 }
 
 const setMediaSessionHandler = (
@@ -330,13 +355,12 @@ async function playSong(isRetry = false) {
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
-    // 先暂停当前播放
-    audioRef.value.pause()
+    // iOS 后台切歌：不要调用 pause()，直接设置新 src
+    // 调用 pause() 会中断 iOS 的音频会话
     audioRef.value.src = url
     audioRef.value.load()
 
-    // 移动端依赖 canplay 事件触发播放
-    // 但如果是用户手势触发的，尝试立即播放
+    // 尝试播放
     try {
       await audioRef.value.play()
       pendingPlay = false
@@ -346,7 +370,8 @@ async function playSong(isRetry = false) {
         pendingPlay = true
         playerStore.isPlaying = true
       } else if (playError.name === 'AbortError') {
-        // 播放被中断（可能是切歌），忽略
+        // 播放被中断（可能是切歌），保持 pendingPlay 等待 canplay
+        pendingPlay = true
       } else {
         throw playError
       }
