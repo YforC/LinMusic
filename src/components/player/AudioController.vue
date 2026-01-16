@@ -8,6 +8,7 @@
     @timeupdate="handleTimeUpdate"
     @ended="handleEnded"
     @loadedmetadata="handleLoadedMetadata"
+    @canplay="handleCanPlay"
     @canplaythrough="handleCanPlayThrough"
     @play="handlePlay"
     @pause="handlePause"
@@ -143,6 +144,13 @@ const handleLoadedMetadata = () => {
   updateMediaSessionPosition()
 }
 
+const handleCanPlay = () => {
+  // canplay 比 canplaythrough 更早触发，在后台时更可靠
+  if (playerStore.isPlaying && audioRef.value?.paused) {
+    audioRef.value.play().catch(() => {})
+  }
+}
+
 const handleCanPlayThrough = () => {
   playerStore.isLoading = false
   isLoadingNextSong = false
@@ -248,7 +256,7 @@ async function resumePlayback() {
 }
 
 // 直接播放下一首（用于后台自动切歌）
-async function playNextDirectly() {
+function playNextDirectly() {
   if (!audioRef.value) return
 
   const playlist = playerStore.playlist
@@ -288,6 +296,7 @@ async function playNextDirectly() {
   playerStore.currentTime = 0
   playerStore.duration = 0
   playerStore.isLoading = true
+  playerStore.isPlaying = true  // 保持播放状态
 
   // 更新 MediaSession
   updateMediaSessionMetadata(nextSong)
@@ -307,19 +316,13 @@ async function playNextDirectly() {
     })
     .catch(() => {})
 
-  // 加载并播放
+  // 加载并播放 - 不使用 await，让事件处理
   const url = getPlayUrl(nextSong.id, nextSong.platform, audioQuality.value)
   audioRef.value.src = url
   audioRef.value.load()
-
-  try {
-    await audioRef.value.play()
-    isLoadingNextSong = false
-    playerStore.isLoading = false
-  } catch (e) {
-    console.warn('Play next failed:', e)
-    // 播放失败，等待 canplaythrough 事件
-  }
+  audioRef.value.play().catch(() => {
+    // 播放失败，canplaythrough 会处理
+  })
 
   loadLyrics(nextSong.id, nextSong.platform)
 }
