@@ -36,132 +36,36 @@ export async function onRequest(context: RequestContext): Promise<Response> {
   if (range) headers.set('range', range)
   if (accept) headers.set('accept', accept)
 
-  // 检查是否是获取播放 URL 的请求
-  const isUrlRequest = url.searchParams.get('type') === 'url'
-  // 检查是否是获取酷我封面图片的请求
-  const isPicRequest = url.searchParams.get('type') === 'pic'
+  // 检查请求类型
+  const requestType = url.searchParams.get('type')
   const source = url.searchParams.get('source')
 
-  if (isUrlRequest) {
-    // 获取上游的重定向 URL
+  // 对于播放 URL 请求，返回上游 API 的 302 重定向给客户端
+  // 让浏览器直接请求音频 URL（audio 元素不受跨域限制）
+  if (requestType === 'url') {
     const upstream = await fetch(upstreamUrl.toString(), {
       method: 'GET',
       headers,
       redirect: 'manual'
     })
 
-    // 如果上游返回 302，获取实际的音频 URL
+    // 如果上游返回 302/301 重定向，直接返回给客户端
     if (upstream.status === 302 || upstream.status === 301) {
       const location = upstream.headers.get('location')
       if (location) {
-        // QQ 音乐需要特殊处理：添加正确的请求头（referer 等）
-        // 其他平台可以直接跟随重定向
-        const isQQ = source === 'qq' || location.includes('qqmusic.qq.com')
-
-        if (isQQ) {
-          // QQ 音乐：代理音频流
-          const audioHeaders = new Headers()
-          audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-          audioHeaders.set('accept', '*/*')
-          audioHeaders.set('accept-language', 'zh-CN,zh;q=0.9,en;q=0.8')
-          audioHeaders.set('referer', 'https://y.qq.com/')
-          if (range) audioHeaders.set('range', range)
-
-          // 优先使用 HTTPS（添加正确的请求头后 HTTPS 也可以工作）
-          const httpsUrl = location.replace(/^http:\/\//, 'https://')
-
-          try {
-            const audioResponse = await fetch(httpsUrl, {
-              method: request.method,
-              headers: audioHeaders
-            })
-
-            // 检查响应是否成功
-            if (!audioResponse.ok) {
-              return new Response(JSON.stringify({
-                error: 'Failed to fetch QQ audio',
-                status: audioResponse.status,
-                statusText: audioResponse.statusText,
-                url: httpsUrl
-              }), {
-                status: audioResponse.status,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Access-Control-Allow-Origin': '*'
-                }
-              })
-            }
-
-            const responseHeaders = new Headers()
-            responseHeaders.set('Access-Control-Allow-Origin', '*')
-            responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-            responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
-            responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
-
-            const contentLength = audioResponse.headers.get('content-length')
-            if (contentLength) responseHeaders.set('Content-Length', contentLength)
-
-            const contentRange = audioResponse.headers.get('content-range')
-            if (contentRange) responseHeaders.set('Content-Range', contentRange)
-
-            const acceptRanges = audioResponse.headers.get('accept-ranges')
-            if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
-
-            return new Response(audioResponse.body, {
-              status: audioResponse.status,
-              statusText: audioResponse.statusText,
-              headers: responseHeaders
-            })
-          } catch (fetchError: any) {
-            return new Response(JSON.stringify({
-              error: 'Fetch error for QQ audio',
-              message: fetchError.message || 'Unknown error',
-              url: httpsUrl
-            }), {
-              status: 500,
-              headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-              }
-            })
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': location,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Allow-Headers': 'Range, Content-Type'
           }
-        } else {
-          // 其他平台：直接跟随重定向并代理音频流
-          const audioHeaders = new Headers()
-          audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-          if (range) audioHeaders.set('range', range)
-
-          const audioResponse = await fetch(location, {
-            method: request.method,
-            headers: audioHeaders,
-            redirect: 'follow'
-          })
-
-          const responseHeaders = new Headers()
-          responseHeaders.set('Access-Control-Allow-Origin', '*')
-          responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-          responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
-          responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
-
-          const contentLength = audioResponse.headers.get('content-length')
-          if (contentLength) responseHeaders.set('Content-Length', contentLength)
-
-          const contentRange = audioResponse.headers.get('content-range')
-          if (contentRange) responseHeaders.set('Content-Range', contentRange)
-
-          const acceptRanges = audioResponse.headers.get('accept-ranges')
-          if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
-
-          return new Response(audioResponse.body, {
-            status: audioResponse.status,
-            statusText: audioResponse.statusText,
-            headers: responseHeaders
-          })
-        }
+        })
       }
     }
 
-    // 如果不是重定向，正常返回
+    // 如果不是重定向，正常返回上游响应
     const responseHeaders = new Headers(upstream.headers)
     responseHeaders.set('Access-Control-Allow-Origin', '*')
     responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
@@ -174,8 +78,8 @@ export async function onRequest(context: RequestContext): Promise<Response> {
     })
   }
 
-  // 对于酷我封面图片请求，直接代理图片内容（避免 SSL 证书问题）
-  if (isPicRequest && source === 'kuwo') {
+  // 对于酷我封面图片请求，直接代理上游 API 的响应（避免 SSL 证书问题）
+  if (requestType === 'pic' && source === 'kuwo') {
     const upstream = await fetch(upstreamUrl.toString(), {
       method: request.method,
       headers,
@@ -199,7 +103,7 @@ export async function onRequest(context: RequestContext): Promise<Response> {
     })
   }
 
-  // 对于其他请求（info, search, lrc 等），正常跟随重定向
+  // 对于其他请求（info, search, lrc, pic 等），正常代理
   const upstream = await fetch(upstreamUrl.toString(), {
     method: request.method,
     headers,
