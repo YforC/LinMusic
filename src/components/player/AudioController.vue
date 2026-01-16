@@ -50,8 +50,8 @@ let shouldPlayOnCanPlay = false
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
-  // 使用完整的 URL 作为 artwork
-  const artworkSrc = getCoverUrl(song.id, song.platform)
+  // 优先使用歌曲已有的 coverUrl，否则使用 API 获取
+  let artworkSrc = song.coverUrl || getCoverUrl(song.id, song.platform)
 
   // 确保 artwork URL 是绝对路径
   let fullArtworkUrl = artworkSrc

@@ -62,7 +62,7 @@
 
         <div class="flex flex-col items-center gap-1">
 
-          <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">姝ｅ湪鎾斁</span>
+          <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">正在播放</span>
 
           <span class="text-base font-semibold text-white/90 max-w-[300px] truncate">{{ currentSong?.name || 'Not playing' }}</span>
 
