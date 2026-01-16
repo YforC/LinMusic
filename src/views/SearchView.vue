@@ -226,6 +226,14 @@ const categories = [
   { name: '健身', color: '#148a08', icon: 'fitness_center' }
 ]
 
+const searchFallbackPlatforms = async (keyword: string) => {
+  const [netease, kuwo] = await Promise.all([
+    searchSongs(keyword, 'netease', 20, { timeoutMs: 10000 }),
+    searchSongs(keyword, 'kuwo', 20, { timeoutMs: 10000 })
+  ])
+  return [...netease, ...kuwo]
+}
+
 // 平台名称映射
 const platformName = (platform: string) => getPlatformName(platform)
 
@@ -240,15 +248,42 @@ const selectPlatform = (platform: Platform | 'all') => {
 
 // 搜索
 const handleSearch = async () => {
-  if (!searchKeyword.value.trim()) return
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) return
 
   isLoading.value = true
   try {
-    let results
+    let results = []
     if (currentPlatform.value === 'all') {
-      results = await aggregateSearch(searchKeyword.value)
+      try {
+        results = await aggregateSearch(keyword, { timeoutMs: 12000, throwOnError: true })
+      } catch {
+        results = []
+      }
+      if (results.length === 0) {
+        const fallback = await searchFallbackPlatforms(keyword)
+        if (fallback.length > 0) {
+          results = fallback
+          globalToast.warning('全平台搜索暂不可用，已展示其他平台结果')
+        }
+      }
+    } else if (currentPlatform.value === 'qq') {
+      try {
+        results = await searchSongs(keyword, currentPlatform.value, 30, { timeoutMs: 10000, throwOnError: true })
+      } catch {
+        results = []
+      }
+      if (results.length === 0) {
+        const fallback = await searchFallbackPlatforms(keyword)
+        if (fallback.length > 0) {
+          results = fallback
+          globalToast.warning('QQ音乐搜索暂不可用，已展示其他平台结果')
+        } else {
+          globalToast.warning('QQ音乐搜索暂不可用，请稍后重试')
+        }
+      }
     } else {
-      results = await searchSongs(searchKeyword.value, currentPlatform.value, 30)
+      results = await searchSongs(keyword, currentPlatform.value, 30, { timeoutMs: 10000 })
     }
     searchResults.value = results.map(item => ({
       id: item.id,

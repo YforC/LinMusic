@@ -11,6 +11,17 @@ const isIosStandalone = () => {
 const BASE_URL = import.meta.env.DEV && !isIosStandalone()
   ? '/music-api/api'
   : '/api/music'
+const DEFAULT_TIMEOUT = 12000
+
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = DEFAULT_TIMEOUT) => {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
 
 export type Platform = 'netease' | 'kuwo' | 'qq'
 export type AudioQuality = '128k' | '320k' | 'flac' | 'flac24bit'
@@ -54,11 +65,12 @@ export interface PlaylistSong {
 export async function searchSongs(
   keyword: string,
   platform: Platform = 'netease',
-  limit: number = 20
+  limit: number = 20,
+  options?: { timeoutMs?: number; throwOnError?: boolean }
 ): Promise<SearchResult[]> {
   try {
     const url = `${BASE_URL}/?source=${platform}&type=search&keyword=${encodeURIComponent(keyword)}&limit=${limit}`
-    const response = await fetch(url)
+    const response = await fetchWithTimeout(url, {}, options?.timeoutMs)
     const data = await response.json()
 
     if (data.code === 200 && data.data?.results) {
@@ -74,15 +86,21 @@ export async function searchSongs(
     return []
   } catch (error) {
     console.error('Search failed:', error)
+    if (options?.throwOnError) {
+      throw error
+    }
     return []
   }
 }
 
 // 聚合搜索（多平台）
-export async function aggregateSearch(keyword: string): Promise<SearchResult[]> {
+export async function aggregateSearch(
+  keyword: string,
+  options?: { timeoutMs?: number; throwOnError?: boolean }
+): Promise<SearchResult[]> {
   try {
     const url = `${BASE_URL}/?type=aggregateSearch&keyword=${encodeURIComponent(keyword)}`
-    const response = await fetch(url)
+    const response = await fetchWithTimeout(url, {}, options?.timeoutMs)
     const data = await response.json()
 
     if (data.code === 200 && data.data?.results) {
@@ -98,6 +116,9 @@ export async function aggregateSearch(keyword: string): Promise<SearchResult[]> 
     return []
   } catch (error) {
     console.error('Aggregate search failed:', error)
+    if (options?.throwOnError) {
+      throw error
+    }
     return []
   }
 }

@@ -24,6 +24,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useAppStore } from '@/stores/app'
 import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl, findAlternativeSong } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
+import { normalizeImageUrl } from '@/utils/format'
 import { storeToRefs } from 'pinia'
 import type { Song, AudioQuality } from '@/api/types'
 
@@ -303,6 +304,10 @@ async function playSong(isRetry = false) {
   }
 
   try {
+    const normalizedCover = normalizeImageUrl(song.coverUrl)
+    if (normalizedCover && normalizedCover !== song.coverUrl) {
+      song.coverUrl = normalizedCover
+    }
     updateMediaSessionMetadata(song)
 
     void getSongInfo(song.id, song.platform)
@@ -310,7 +315,7 @@ async function playSong(isRetry = false) {
         if (!info) return
         if (currentLoadingSongId !== songId) return
         if (!song.coverUrl) {
-          song.coverUrl = info.pic || getCoverUrl(song.id, song.platform)
+          song.coverUrl = normalizeImageUrl(info.pic) || normalizeImageUrl(getCoverUrl(song.id, song.platform))
         }
         if (!song.album) {
           song.album = info.album
@@ -408,7 +413,7 @@ async function tryFallbackSource() {
         artist: alternative.artist,
         album: alternative.album || song.album,
         platform: alternative.platform,
-        coverUrl: alternative.pic || song.coverUrl,
+        coverUrl: normalizeImageUrl(alternative.pic) || song.coverUrl,
         duration: song.duration
       }
       // 更新播放列表中的歌曲
@@ -518,6 +523,10 @@ function playNextDirectly() {
   playbackQuality = audioQuality.value
 
   // 更新 MediaSession
+  const normalizedCover = normalizeImageUrl(nextSong.coverUrl)
+  if (normalizedCover && normalizedCover !== nextSong.coverUrl) {
+    nextSong.coverUrl = normalizedCover
+  }
   updateMediaSessionMetadata(nextSong)
   registerMediaSessionHandlers()
 
@@ -526,7 +535,7 @@ function playNextDirectly() {
     .then((info) => {
       if (!info || currentLoadingSongId !== songId) return
       if (!nextSong.coverUrl) {
-        nextSong.coverUrl = info.pic || getCoverUrl(nextSong.id, nextSong.platform)
+        nextSong.coverUrl = normalizeImageUrl(info.pic) || normalizeImageUrl(getCoverUrl(nextSong.id, nextSong.platform))
       }
       if (!nextSong.album) {
         nextSong.album = info.album
