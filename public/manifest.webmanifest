@@ -2,9 +2,11 @@
   "name": "LinMusic",
   "short_name": "LinMusic",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/favicon.svg",
