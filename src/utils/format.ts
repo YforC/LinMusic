@@ -96,7 +96,15 @@ export function normalizeImageUrl(url?: string | null): string | undefined {
   if (!url) return undefined
   const trimmed = url.trim()
   if (!trimmed) return undefined
-  if (trimmed.startsWith('//')) return `https:${trimmed}`
-  if (trimmed.startsWith('http://')) return `https://${trimmed.slice(7)}`
-  return trimmed
+
+  let normalized = trimmed
+  if (normalized.startsWith('//')) normalized = `https:${normalized}`
+  if (normalized.startsWith('http://')) normalized = `https://${normalized.slice(7)}`
+
+  // 酷我音乐图片服务器 SSL 证书无效，需要通过代理
+  if (normalized.includes('kwcdn.kuwo.cn') || normalized.includes('star.kuwo.cn')) {
+    return `/api/image-proxy?url=${encodeURIComponent(normalized)}`
+  }
+
+  return normalized
 }
