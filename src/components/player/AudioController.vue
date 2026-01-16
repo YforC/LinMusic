@@ -22,7 +22,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useAppStore } from '@/stores/app'
-import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl } from '@/api/music'
+import { getPlayUrl, getLyrics, getSongInfo, getCoverUrl, findAlternativeSong } from '@/api/music'
 import { parseLrc } from '@/utils/lrc-parser'
 import { storeToRefs } from 'pinia'
 import type { Song } from '@/api/types'
@@ -50,6 +50,7 @@ const MAX_RETRIES = 3
 let isSwitchingSong = false
 let currentLoadingSongId = ''
 let isAutoNexting = false
+let hasTriedFallback = false
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -275,6 +276,7 @@ async function playSong(isRetry = false) {
 
   if (!isRetry) {
     retryCount = 0
+    hasTriedFallback = false
     isSwitchingSong = true
     currentLoadingSongId = songId
   }
@@ -347,9 +349,14 @@ function handleLoadError() {
         playSong(true)
       }
     }, 1000 * retryCount)
+  } else if (!hasTriedFallback && currentSong.value) {
+    // 重试次数用完后，尝试从其他平台换源
+    hasTriedFallback = true
+    tryFallbackSource()
   } else {
-    console.log('Max retries reached, trying next song')
+    console.log('Max retries reached and fallback failed, trying next song')
     retryCount = 0
+    hasTriedFallback = false
     const playlist = playerStore.playlist
     const currentIndex = playerStore.currentIndex
     if (playlist.length > 1 && currentIndex < playlist.length - 1) {
@@ -357,6 +364,48 @@ function handleLoadError() {
     } else {
       playerStore.isPlaying = false
     }
+  }
+}
+
+// 尝试从其他平台获取相同歌曲
+async function tryFallbackSource() {
+  const song = currentSong.value
+  if (!song) return
+
+  console.log(`Trying to find alternative source for: ${song.name} - ${song.artist}`)
+  playerStore.isLoading = true
+
+  try {
+    const alternative = await findAlternativeSong(song.name, song.artist, song.platform)
+    if (alternative) {
+      console.log(`Found alternative: ${alternative.name} - ${alternative.artist} (${alternative.platform})`)
+      // 更新当前歌曲信息为替代源
+      const newSong: Song = {
+        id: alternative.id,
+        name: alternative.name,
+        artist: alternative.artist,
+        album: alternative.album || song.album,
+        platform: alternative.platform,
+        coverUrl: alternative.pic || song.coverUrl,
+        duration: song.duration
+      }
+      // 更新播放列表中的歌曲
+      const playlist = playerStore.playlist
+      const currentIndex = playerStore.currentIndex
+      if (currentIndex >= 0 && currentIndex < playlist.length) {
+        playlist[currentIndex] = newSong
+      }
+      // 重置重试计数并播放新源
+      retryCount = 0
+      playerStore.currentSong = newSong
+      // currentSong 的 watch 会触发 playSong
+    } else {
+      console.log('No alternative source found')
+      handleLoadError() // 会进入跳过逻辑
+    }
+  } catch (error) {
+    console.error('Find alternative failed:', error)
+    handleLoadError() // 会进入跳过逻辑
   }
 }
 
