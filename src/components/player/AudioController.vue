@@ -8,6 +8,7 @@
     @timeupdate="handleTimeUpdate"
     @ended="handleEnded"
     @loadedmetadata="handleLoadedMetadata"
+    @loadeddata="handleLoadedData"
     @canplay="handleCanPlay"
     @play="handlePlay"
     @pause="handlePause"
@@ -117,13 +118,22 @@ const handleLoadedMetadata = () => {
   updateMediaSessionPosition()
 }
 
+const handleLoadedData = () => {
+  // loadeddata 在第一帧数据加载后触发，是后台播放的关键时机
+  if (shouldPlayOnCanPlay && audioRef.value && audioRef.value.paused) {
+    audioRef.value.play().catch(e => {
+      console.warn('Play on loadeddata failed:', e)
+    })
+  }
+}
+
 const handleCanPlay = () => {
   playerStore.isLoading = false
   isSwitchingSong = false
   retryCount = 0
 
   // 如果需要在 canplay 时播放（自动切歌场景）
-  if (shouldPlayOnCanPlay && audioRef.value) {
+  if (shouldPlayOnCanPlay && audioRef.value && audioRef.value.paused) {
     shouldPlayOnCanPlay = false
     audioRef.value.play().catch(e => {
       console.warn('Play on canplay failed:', e)
@@ -139,7 +149,8 @@ const handlePlay = () => {
 }
 
 const handlePause = () => {
-  if (!isSeeking && !isSwitchingSong) {
+  // 切歌时、seeking 时、或等待 canplay 播放时，不要重置播放状态
+  if (!isSeeking && !isSwitchingSong && !shouldPlayOnCanPlay) {
     playerStore.isPlaying = false
   }
   if ('mediaSession' in navigator) {
