@@ -46,36 +46,19 @@ let isSwitchingSong = false
 let currentLoadingSongId = ''
 // 标记是否需要在 canplay 后自动播放
 let shouldPlayOnCanPlay = false
+// 播放重试定时器
+let playRetryTimer: number | null = null
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
 
-  // 优先使用歌曲已有的 coverUrl，否则使用 API 获取
-  let artworkSrc = song.coverUrl || getCoverUrl(song.id, song.platform)
-
-  // 确保 artwork URL 是绝对路径
-  let fullArtworkUrl = artworkSrc
-  if (artworkSrc && !artworkSrc.startsWith('http')) {
-    fullArtworkUrl = window.location.origin + artworkSrc
-  }
-
-  const artwork = fullArtworkUrl
-    ? [
-        { src: fullArtworkUrl, sizes: '96x96', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '128x128', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '192x192', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '256x256', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '384x384', type: 'image/jpeg' },
-        { src: fullArtworkUrl, sizes: '512x512', type: 'image/jpeg' }
-      ]
-    : []
-
+  // 不设置 artwork，避免 iOS 锁屏页点击跳转问题
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || '',
-      artwork
+      album: song.album || ''
+      // 移除 artwork，防止 iOS 点击跳转
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
@@ -99,12 +82,47 @@ const updateMediaSessionPosition = () => {
   }
 }
 
+// 尝试播放音频
+function tryPlay() {
+  if (!audioRef.value || !audioRef.value.src) return
+
+  // 清除之前的重试定时器
+  if (playRetryTimer) {
+    clearTimeout(playRetryTimer)
+    playRetryTimer = null
+  }
+
+  audioRef.value.play().catch(e => {
+    console.warn('Play attempt failed:', e.name, e.message)
+
+    // 如果是 NotAllowedError，设置重试
+    if (e.name === 'NotAllowedError') {
+      shouldPlayOnCanPlay = true
+      playerStore.isPlaying = true // 保持状态
+
+      // 500ms 后重试
+      playRetryTimer = window.setTimeout(() => {
+        if (audioRef.value && audioRef.value.paused && playerStore.isPlaying) {
+          tryPlay()
+        }
+      }, 500)
+    }
+  })
+}
+
 // 时间更新事件
 const handleTimeUpdate = () => {
   if (isSeeking || isSwitchingSong) return
   if (!audioRef.value) return
   const position = audioRef.value.currentTime
   if (!Number.isFinite(position)) return
+
+  // 检查音频是否真正在播放（有声音）
+  // 如果 isPlaying 为 true 但音频暂停了，尝试恢复播放
+  if (playerStore.isPlaying && audioRef.value.paused) {
+    tryPlay()
+  }
+
   playerStore.currentTime = position
   playerStore.updateLyricIndex()
   const now = Date.now()
@@ -137,15 +155,18 @@ const handleCanPlay = () => {
   // 如果需要自动播放，在这里触发
   if (shouldPlayOnCanPlay && audioRef.value) {
     shouldPlayOnCanPlay = false
-    audioRef.value.play().catch(e => {
-      console.warn('Auto play on canplay failed:', e)
-    })
+    tryPlay()
   }
 }
 
 // 可以完整播放
 const handleCanPlayThrough = () => {
   playerStore.isLoading = false
+
+  // 再次尝试播放，确保音频开始
+  if (playerStore.isPlaying && audioRef.value?.paused) {
+    tryPlay()
+  }
 }
 
 // 播放开始
@@ -159,7 +180,7 @@ const handlePlay = () => {
 // 暂停
 const handlePause = () => {
   // 只有在非 seek 状态且非切换歌曲状态下才更新 isPlaying
-  if (!isSeeking && !isSwitchingSong) {
+  if (!isSeeking && !isSwitchingSong && !shouldPlayOnCanPlay) {
     playerStore.isPlaying = false
   }
   if ('mediaSession' in navigator) {
@@ -182,15 +203,20 @@ const handleWaiting = () => {
 const handlePlaying = () => {
   playerStore.isLoading = false
   playerStore.isPlaying = true
+  shouldPlayOnCanPlay = false
+
+  // 清除重试定时器
+  if (playRetryTimer) {
+    clearTimeout(playRetryTimer)
+    playRetryTimer = null
+  }
 }
 
 // seek 完成
 const handleSeeked = () => {
   // seek 完成后，如果应该播放，确保播放
   if (playerStore.isPlaying && audioRef.value?.paused) {
-    audioRef.value.play().catch(e => {
-      console.warn('Play after seeked failed:', e)
-    })
+    tryPlay()
   }
 }
 
@@ -210,13 +236,16 @@ const registerMediaSessionHandlers = () => {
 
   setMediaSessionHandler('play', () => {
     if (audioRef.value) {
-      audioRef.value.play().catch(e => {
-        console.warn('MediaSession play failed:', e)
-      })
+      tryPlay()
     }
   })
 
   setMediaSessionHandler('pause', () => {
+    shouldPlayOnCanPlay = false
+    if (playRetryTimer) {
+      clearTimeout(playRetryTimer)
+      playRetryTimer = null
+    }
     audioRef.value?.pause()
   })
 
@@ -248,6 +277,11 @@ const registerMediaSessionHandlers = () => {
   })
 
   setMediaSessionHandler('stop', () => {
+    shouldPlayOnCanPlay = false
+    if (playRetryTimer) {
+      clearTimeout(playRetryTimer)
+      playRetryTimer = null
+    }
     audioRef.value?.pause()
   })
 }
@@ -278,9 +312,7 @@ function seek(time: number) {
     isSeeking = false
     // 如果之前是播放状态，确保继续播放
     if (wasPlaying && audioRef.value?.paused) {
-      audioRef.value.play().catch(e => {
-        console.warn('Play after seek timeout failed:', e)
-      })
+      tryPlay()
     }
   }, 100)
 }
@@ -308,6 +340,12 @@ async function playSong(isRetry = false) {
     isSwitchingSong = true
     currentLoadingSongId = songId
     shouldPlayOnCanPlay = true
+
+    // 清除之前的重试定时器
+    if (playRetryTimer) {
+      clearTimeout(playRetryTimer)
+      playRetryTimer = null
+    }
   }
 
   // 检查是否是同一首歌
@@ -354,24 +392,8 @@ async function playSong(isRetry = false) {
     // 加载
     audioRef.value.load()
 
-    // 尝试播放 - iOS 后台可能会失败，但我们在 canplay 事件中会重试
-    audioRef.value.play().catch(playError => {
-      // 如果是用户交互问题，标记需要在 canplay 后播放
-      if (playError.name === 'NotAllowedError') {
-        console.warn('Playback requires user interaction, will retry on canplay')
-        shouldPlayOnCanPlay = true
-        playerStore.isPlaying = true // 保持状态
-      } else if (playError.name === 'AbortError') {
-        // 加载被中断，可能是切换歌曲，忽略
-        console.warn('Play aborted, probably switching songs')
-      } else {
-        console.error('Play error:', playError)
-        // 其他错误，尝试重试
-        if (currentLoadingSongId === songId) {
-          handleLoadError()
-        }
-      }
-    })
+    // 尝试播放
+    tryPlay()
 
     // 加载歌词
     loadLyrics(song.id, song.platform)
@@ -388,6 +410,11 @@ function handleLoadError() {
   playerStore.isLoading = false
   isSwitchingSong = false
   shouldPlayOnCanPlay = false
+
+  if (playRetryTimer) {
+    clearTimeout(playRetryTimer)
+    playRetryTimer = null
+  }
 
   if (retryCount < MAX_RETRIES) {
     retryCount++
@@ -429,11 +456,8 @@ function handleSongEnd() {
       if (audioRef.value) {
         endHandled = false
         audioRef.value.currentTime = 0
-        audioRef.value.play().catch(e => {
-          console.warn('Single loop play failed:', e)
-          // 如果播放失败，标记需要在用户交互后播放
-          shouldPlayOnCanPlay = true
-        })
+        shouldPlayOnCanPlay = true
+        tryPlay()
       }
       break
 
@@ -476,11 +500,14 @@ watch(isPlaying, (playing) => {
 
   if (playing) {
     if (audioRef.value.paused && audioRef.value.src) {
-      audioRef.value.play().catch(e => {
-        console.warn('Play failed:', e)
-      })
+      tryPlay()
     }
   } else {
+    shouldPlayOnCanPlay = false
+    if (playRetryTimer) {
+      clearTimeout(playRetryTimer)
+      playRetryTimer = null
+    }
     if (!audioRef.value.paused) {
       audioRef.value.pause()
     }
@@ -503,6 +530,9 @@ watch(currentSong, (newSong, oldSong) => {
 
 // 清理
 onUnmounted(() => {
+  if (playRetryTimer) {
+    clearTimeout(playRetryTimer)
+  }
   if (audioRef.value) {
     audioRef.value.pause()
     audioRef.value.src = ''
