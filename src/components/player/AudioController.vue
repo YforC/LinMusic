@@ -8,17 +8,13 @@
     @timeupdate="handleTimeUpdate"
     @ended="handleEnded"
     @loadedmetadata="handleLoadedMetadata"
-    @loadeddata="handleLoadedData"
     @canplay="handleCanPlay"
-    @canplaythrough="handleCanPlayThrough"
     @play="handlePlay"
     @pause="handlePause"
     @error="handleError"
     @waiting="handleWaiting"
     @playing="handlePlaying"
     @seeked="handleSeeked"
-    @loadstart="handleLoadStart"
-    @stalled="handleStalled"
   ></audio>
 </template>
 
@@ -42,7 +38,6 @@ let retryCount = 0
 const MAX_RETRIES = 3
 let isSwitchingSong = false
 let currentLoadingSongId = ''
-let pendingPlay = false
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
@@ -125,33 +120,17 @@ const handleCanPlay = () => {
   playerStore.isLoading = false
   isSwitchingSong = false
   retryCount = 0
-
-  // 如果需要播放且当前是暂停状态，尝试播放
-  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
-    audioRef.value.play()
-      .then(() => {
-        pendingPlay = false
-      })
-      .catch(e => {
-        console.warn('Play on canplay failed:', e)
-        // 如果是 NotAllowedError，保持 pendingPlay = true，等待用户交互
-        if (e.name !== 'NotAllowedError') {
-          pendingPlay = false
-        }
-      })
-  }
 }
 
 const handlePlay = () => {
   playerStore.isPlaying = true
-  pendingPlay = false
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing'
   }
 }
 
 const handlePause = () => {
-  if (!isSeeking && !isSwitchingSong && !pendingPlay) {
+  if (!isSeeking && !isSwitchingSong) {
     playerStore.isPlaying = false
   }
   if ('mediaSession' in navigator) {
@@ -171,7 +150,6 @@ const handleWaiting = () => {
 const handlePlaying = () => {
   playerStore.isLoading = false
   playerStore.isPlaying = true
-  pendingPlay = false
 }
 
 const handleSeeked = () => {
@@ -179,45 +157,6 @@ const handleSeeked = () => {
     audioRef.value.play().catch(e => {
       console.warn('Play after seeked failed:', e)
     })
-  }
-}
-
-const handleCanPlayThrough = () => {
-  // 移动端可能在 canplaythrough 时更可靠
-  // 如果需要播放且当前是暂停状态，尝试播放
-  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
-    audioRef.value.play()
-      .then(() => {
-        pendingPlay = false
-      })
-      .catch(e => {
-        console.warn('Play on canplaythrough failed:', e)
-      })
-  }
-}
-
-const handleLoadStart = () => {
-  playerStore.isLoading = true
-}
-
-const handleLoadedData = () => {
-  // loadeddata 事件在第一帧数据加载完成后触发
-  // 这是 iOS 后台播放的关键时机
-  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
-    audioRef.value.play()
-      .then(() => {
-        pendingPlay = false
-      })
-      .catch(e => {
-        console.warn('Play on loadeddata failed:', e)
-      })
-  }
-}
-
-const handleStalled = () => {
-  // 音频停滞时，如果应该播放，尝试恢复
-  if ((pendingPlay || playerStore.isPlaying) && audioRef.value && audioRef.value.paused) {
-    audioRef.value.play().catch(() => {})
   }
 }
 
@@ -321,7 +260,6 @@ async function playSong(isRetry = false) {
     retryCount = 0
     isSwitchingSong = true
     currentLoadingSongId = songId
-    pendingPlay = true
   }
 
   if (currentLoadingSongId !== songId) {
@@ -355,31 +293,31 @@ async function playSong(isRetry = false) {
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
-    // iOS 后台切歌：不要调用 pause()，直接设置新 src
-    // 调用 pause() 会中断 iOS 的音频会话
     audioRef.value.src = url
     audioRef.value.load()
 
-    // 尝试播放
-    try {
-      await audioRef.value.play()
-      pendingPlay = false
-    } catch (playError: any) {
-      if (playError.name === 'NotAllowedError') {
-        // 自动播放被阻止，等待用户交互或 canplay 事件
-        pendingPlay = true
-        playerStore.isPlaying = true
-      } else if (playError.name === 'AbortError') {
-        // 播放被中断（可能是切歌），保持 pendingPlay 等待 canplay
-        pendingPlay = true
-      } else {
-        throw playError
-      }
-    }
+    // 简单直接地尝试播放
+    await audioRef.value.play()
 
     loadLyrics(song.id, song.platform)
-  } catch (error) {
-    console.error('Play failed:', error)
+  } catch (error: any) {
+    console.warn('Play error:', error?.name, error?.message)
+
+    // NotAllowedError: 自动播放被阻止，这是正常的，等待用户交互
+    if (error?.name === 'NotAllowedError') {
+      playerStore.isPlaying = true
+      playerStore.isLoading = false
+      isSwitchingSong = false
+      loadLyrics(song.id, song.platform)
+      return
+    }
+
+    // AbortError: 播放被中断，可能是快速切歌，忽略
+    if (error?.name === 'AbortError') {
+      return
+    }
+
+    // 其他错误，尝试重试
     if (currentLoadingSongId === songId) {
       handleLoadError()
     }
@@ -389,7 +327,6 @@ async function playSong(isRetry = false) {
 function handleLoadError() {
   playerStore.isLoading = false
   isSwitchingSong = false
-  pendingPlay = false
 
   if (retryCount < MAX_RETRIES) {
     retryCount++
@@ -461,27 +398,10 @@ watch(isPlaying, (playing) => {
   if (!audioRef.value) return
 
   if (playing) {
-    if (audioRef.value.paused) {
-      // 如果有 src，尝试播放
-      if (audioRef.value.src) {
-        audioRef.value.play()
-          .then(() => {
-            pendingPlay = false
-          })
-          .catch((e) => {
-            console.warn('Play from isPlaying watch failed:', e)
-            // 如果播放失败且不是 NotAllowedError，重置状态
-            if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') {
-              playerStore.isPlaying = false
-            }
-          })
-      } else if (currentSong.value) {
-        // 没有 src 但有歌曲，重新加载
-        playSong()
-      }
+    if (audioRef.value.paused && audioRef.value.src) {
+      audioRef.value.play().catch(() => {})
     }
   } else {
-    pendingPlay = false
     if (!audioRef.value.paused) {
       audioRef.value.pause()
     }
