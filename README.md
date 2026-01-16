@@ -224,13 +224,6 @@ iOS PWA 对后台播放有限制，需要：
 
 本项目采用 [MIT](LICENSE) 许可证。
 
-## 致谢
-
-- [TuneHub](https://music-dl.sayqz.com) - 音乐 API 服务
-- [Vue.js](https://vuejs.org) - 前端框架
-- [Tailwind CSS](https://tailwindcss.com) - CSS 框架
-- [Cloudflare](https://cloudflare.com) - 部署平台
-
 ---
 
 <p align="center">
