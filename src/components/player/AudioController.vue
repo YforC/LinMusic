@@ -9,12 +9,14 @@
     @ended="handleEnded"
     @loadedmetadata="handleLoadedMetadata"
     @canplay="handleCanPlay"
+    @canplaythrough="handleCanPlayThrough"
     @play="handlePlay"
     @pause="handlePause"
     @error="handleError"
     @waiting="handleWaiting"
     @playing="handlePlaying"
     @seeked="handleSeeked"
+    @loadstart="handleLoadStart"
   ></audio>
 </template>
 
@@ -123,10 +125,17 @@ const handleCanPlay = () => {
   retryCount = 0
 
   if (pendingPlay && audioRef.value) {
-    pendingPlay = false
-    audioRef.value.play().catch(e => {
-      console.warn('Play on canplay failed:', e)
-    })
+    audioRef.value.play()
+      .then(() => {
+        pendingPlay = false
+      })
+      .catch(e => {
+        console.warn('Play on canplay failed:', e)
+        // 如果是 NotAllowedError，保持 pendingPlay = true，等待用户交互
+        if (e.name !== 'NotAllowedError') {
+          pendingPlay = false
+        }
+      })
   }
 }
 
@@ -168,6 +177,23 @@ const handleSeeked = () => {
       console.warn('Play after seeked failed:', e)
     })
   }
+}
+
+const handleCanPlayThrough = () => {
+  // 移动端可能在 canplaythrough 时更可靠
+  if (pendingPlay && audioRef.value && audioRef.value.paused) {
+    audioRef.value.play()
+      .then(() => {
+        pendingPlay = false
+      })
+      .catch(e => {
+        console.warn('Play on canplaythrough failed:', e)
+      })
+  }
+}
+
+const handleLoadStart = () => {
+  playerStore.isLoading = true
 }
 
 const setMediaSessionHandler = (
@@ -304,18 +330,23 @@ async function playSong(isRetry = false) {
 
     const url = getPlayUrl(song.id, song.platform, audioQuality.value)
 
+    // 先暂停当前播放
+    audioRef.value.pause()
     audioRef.value.src = url
     audioRef.value.load()
 
+    // 移动端依赖 canplay 事件触发播放
+    // 但如果是用户手势触发的，尝试立即播放
     try {
       await audioRef.value.play()
       pendingPlay = false
     } catch (playError: any) {
       if (playError.name === 'NotAllowedError') {
+        // 自动播放被阻止，等待用户交互或 canplay 事件
         pendingPlay = true
         playerStore.isPlaying = true
       } else if (playError.name === 'AbortError') {
-        // ignore
+        // 播放被中断（可能是切歌），忽略
       } else {
         throw playError
       }
@@ -405,8 +436,24 @@ watch(isPlaying, (playing) => {
   if (!audioRef.value) return
 
   if (playing) {
-    if (audioRef.value.paused && audioRef.value.src) {
-      audioRef.value.play().catch(() => {})
+    if (audioRef.value.paused) {
+      // 如果有 src，尝试播放
+      if (audioRef.value.src) {
+        audioRef.value.play()
+          .then(() => {
+            pendingPlay = false
+          })
+          .catch((e) => {
+            console.warn('Play from isPlaying watch failed:', e)
+            // 如果播放失败且不是 NotAllowedError，重置状态
+            if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') {
+              playerStore.isPlaying = false
+            }
+          })
+      } else if (currentSong.value) {
+        // 没有 src 但有歌曲，重新加载
+        playSong()
+      }
     }
   } else {
     pendingPlay = false
