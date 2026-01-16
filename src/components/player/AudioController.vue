@@ -315,7 +315,10 @@ async function playSong(isRetry = false) {
         if (!info) return
         if (currentLoadingSongId !== songId) return
         if (!song.coverUrl) {
-          song.coverUrl = normalizeImageUrl(info.pic) || normalizeImageUrl(getCoverUrl(song.id, song.platform))
+          // 酷我来源使用 getCoverUrl 通过后端代理获取封面（避免 SSL 证书问题）
+          song.coverUrl = song.platform === 'kuwo'
+            ? getCoverUrl(song.id, song.platform)
+            : (normalizeImageUrl(info.pic) || getCoverUrl(song.id, song.platform))
         }
         if (!song.album) {
           song.album = info.album
@@ -535,7 +538,10 @@ function playNextDirectly() {
     .then((info) => {
       if (!info || currentLoadingSongId !== songId) return
       if (!nextSong.coverUrl) {
-        nextSong.coverUrl = normalizeImageUrl(info.pic) || normalizeImageUrl(getCoverUrl(nextSong.id, nextSong.platform))
+        // 酷我来源使用 getCoverUrl 通过后端代理获取封面（避免 SSL 证书问题）
+        nextSong.coverUrl = nextSong.platform === 'kuwo'
+          ? getCoverUrl(nextSong.id, nextSong.platform)
+          : (normalizeImageUrl(info.pic) || getCoverUrl(nextSong.id, nextSong.platform))
       }
       if (!nextSong.album) {
         nextSong.album = info.album

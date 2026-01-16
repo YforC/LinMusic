@@ -246,6 +246,10 @@ const resolveSongName = (item: any): string => {
 }
 
 const resolveCoverUrl = (item: any, platform: Platform, songId?: string): string | undefined => {
+  // 酷我来源直接使用 getCoverUrl 通过后端代理获取封面（避免 SSL 证书问题）
+  if (platform === 'kuwo' && songId) {
+    return getCoverUrl(songId, platform)
+  }
   const candidates = [
     item.pic,
     item.coverUrl,
@@ -262,7 +266,7 @@ const resolveCoverUrl = (item: any, platform: Platform, songId?: string): string
   const direct = candidates.find((value) => typeof value === 'string' && value.trim().length > 0)
   const normalized = normalizeImageUrl(direct)
   if (normalized) return normalized
-  if (songId) return normalizeImageUrl(getCoverUrl(songId, platform))
+  if (songId) return getCoverUrl(songId, platform)
   return undefined
 }
 

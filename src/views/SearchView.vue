@@ -177,7 +177,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { aggregateSearch, searchSongs, type Platform, type SearchResult } from '@/api/music'
+import { aggregateSearch, searchSongs, getCoverUrl, type Platform, type SearchResult } from '@/api/music'
 import { getPlatformName, normalizeImageUrl } from '@/utils/format'
 import { globalToast } from '@/composables/useToast'
 import SongMenu from '@/components/music/SongMenu.vue'
@@ -291,7 +291,8 @@ const handleSearch = async () => {
       name: item.name,
       artist: item.artist,
       album: item.album,
-      coverUrl: normalizeImageUrl(item.pic)
+      // 酷我来源使用 getCoverUrl 通过后端代理获取封面（避免 SSL 证书问题）
+      coverUrl: item.platform === 'kuwo' ? getCoverUrl(item.id, item.platform) : normalizeImageUrl(item.pic)
     }))
   } catch (error) {
     console.error('Search failed:', error)

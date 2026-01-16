@@ -38,51 +38,131 @@ export async function onRequest(context: RequestContext): Promise<Response> {
 
   // 检查是否是获取播放 URL 的请求
   const isUrlRequest = url.searchParams.get('type') === 'url'
+  // 检查是否是获取酷我封面图片的请求
+  const isPicRequest = url.searchParams.get('type') === 'pic'
+  const source = url.searchParams.get('source')
 
   if (isUrlRequest) {
-    // 对于播放 URL 请求，直接跟随重定向并代理音频流
-    // Cloudflare Workers 的 fetch 会自动处理 HTTP -> HTTPS 升级
+    // 获取上游的重定向 URL
+    const upstream = await fetch(upstreamUrl.toString(), {
+      method: 'GET',
+      headers,
+      redirect: 'manual'
+    })
+
+    // 如果上游返回 302，获取实际的音频 URL
+    if (upstream.status === 302 || upstream.status === 301) {
+      const location = upstream.headers.get('location')
+      if (location) {
+        // QQ 音乐的 HTTPS 会返回 403，需要使用 HTTP 并代理流
+        // 其他平台可以尝试 HTTPS 重定向
+        const isQQ = source === 'qq' || location.includes('qqmusic.qq.com')
+
+        if (isQQ) {
+          // QQ 音乐：代理音频流（使用 HTTP URL）
+          const audioHeaders = new Headers()
+          audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+          if (range) audioHeaders.set('range', range)
+
+          // 确保使用 HTTP（QQ 音乐 HTTPS 会 403）
+          const httpUrl = location.replace(/^https:\/\//, 'http://')
+
+          const audioResponse = await fetch(httpUrl, {
+            method: request.method,
+            headers: audioHeaders
+          })
+
+          const responseHeaders = new Headers()
+          responseHeaders.set('Access-Control-Allow-Origin', '*')
+          responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+          responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
+          responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
+
+          const contentLength = audioResponse.headers.get('content-length')
+          if (contentLength) responseHeaders.set('Content-Length', contentLength)
+
+          const contentRange = audioResponse.headers.get('content-range')
+          if (contentRange) responseHeaders.set('Content-Range', contentRange)
+
+          const acceptRanges = audioResponse.headers.get('accept-ranges')
+          if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
+
+          return new Response(audioResponse.body, {
+            status: audioResponse.status,
+            statusText: audioResponse.statusText,
+            headers: responseHeaders
+          })
+        } else {
+          // 其他平台：直接跟随重定向并代理音频流
+          const audioHeaders = new Headers()
+          audioHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+          if (range) audioHeaders.set('range', range)
+
+          const audioResponse = await fetch(location, {
+            method: request.method,
+            headers: audioHeaders,
+            redirect: 'follow'
+          })
+
+          const responseHeaders = new Headers()
+          responseHeaders.set('Access-Control-Allow-Origin', '*')
+          responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+          responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
+          responseHeaders.set('Content-Type', audioResponse.headers.get('content-type') || 'audio/mpeg')
+
+          const contentLength = audioResponse.headers.get('content-length')
+          if (contentLength) responseHeaders.set('Content-Length', contentLength)
+
+          const contentRange = audioResponse.headers.get('content-range')
+          if (contentRange) responseHeaders.set('Content-Range', contentRange)
+
+          const acceptRanges = audioResponse.headers.get('accept-ranges')
+          if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
+
+          return new Response(audioResponse.body, {
+            status: audioResponse.status,
+            statusText: audioResponse.statusText,
+            headers: responseHeaders
+          })
+        }
+      }
+    }
+
+    // 如果不是重定向，正常返回
+    const responseHeaders = new Headers(upstream.headers)
+    responseHeaders.set('Access-Control-Allow-Origin', '*')
+    responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+    responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders
+    })
+  }
+
+  // 对于酷我封面图片请求，直接代理图片内容（避免 SSL 证书问题）
+  if (isPicRequest && source === 'kuwo') {
     const upstream = await fetch(upstreamUrl.toString(), {
       method: request.method,
       headers,
       redirect: 'follow'
     })
 
-    // 检查响应是否成功
     if (!upstream.ok) {
-      // 如果失败，返回错误信息
-      return new Response(JSON.stringify({
-        error: 'Failed to fetch audio',
-        status: upstream.status,
-        statusText: upstream.statusText
-      }), {
-        status: upstream.status,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      })
+      return new Response('Failed to fetch image', { status: upstream.status })
     }
 
-    const responseHeaders = new Headers()
-    responseHeaders.set('Access-Control-Allow-Origin', '*')
-    responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-    responseHeaders.set('Access-Control-Allow-Headers', 'Range, Content-Type')
-    responseHeaders.set('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg')
-
-    const contentLength = upstream.headers.get('content-length')
-    if (contentLength) responseHeaders.set('Content-Length', contentLength)
-
-    const contentRange = upstream.headers.get('content-range')
-    if (contentRange) responseHeaders.set('Content-Range', contentRange)
-
-    const acceptRanges = upstream.headers.get('accept-ranges')
-    if (acceptRanges) responseHeaders.set('Accept-Ranges', acceptRanges)
+    const contentType = upstream.headers.get('content-type') || 'image/jpeg'
+    const cacheControl = upstream.headers.get('cache-control') || 'public, max-age=86400'
 
     return new Response(upstream.body, {
-      status: upstream.status,
-      statusText: upstream.statusText,
-      headers: responseHeaders
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': cacheControl,
+        'Access-Control-Allow-Origin': '*'
+      }
     })
   }
 
