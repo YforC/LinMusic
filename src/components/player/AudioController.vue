@@ -396,21 +396,93 @@ function handleSongEnd() {
       break
 
     case 'loop':
-      playerStore.playNext()
-      break
-
     case 'shuffle':
-      playerStore.playNext()
+      // iOS 后台播放：直接在这里切歌并播放，不通过 store
+      playNextSongDirectly()
       break
 
     default:
       if (currentIndex < playlist.length - 1) {
-        playerStore.playNext()
+        playNextSongDirectly()
       } else {
         playerStore.isPlaying = false
       }
       break
   }
+}
+
+// iOS 后台播放专用：直接播放下一首，不中断音频会话
+async function playNextSongDirectly() {
+  if (!audioRef.value) return
+
+  const playlist = playerStore.playlist
+  const currentIndex = playerStore.currentIndex
+
+  let nextIndex: number
+  if (playMode.value === 'shuffle') {
+    // 随机模式
+    const count = playlist.length
+    if (count <= 1) {
+      nextIndex = 0
+    } else {
+      nextIndex = Math.floor(Math.random() * count)
+      if (nextIndex === currentIndex) {
+        nextIndex = (currentIndex + 1) % count
+      }
+    }
+  } else {
+    // 顺序或循环模式
+    nextIndex = (currentIndex + 1) % playlist.length
+  }
+
+  const nextSong = playlist[nextIndex]
+  if (!nextSong) {
+    playerStore.isPlaying = false
+    return
+  }
+
+  // 更新 store 状态
+  playerStore.currentIndex = nextIndex
+  playerStore.currentSong = nextSong
+  playerStore.currentTime = 0
+
+  const songId = `${nextSong.platform}-${nextSong.id}`
+  currentLoadingSongId = songId
+  endHandled = false
+  isSwitchingSong = true
+  shouldPlayOnCanPlay = true
+
+  // 更新 MediaSession
+  updateMediaSessionMetadata(nextSong)
+
+  // 获取歌曲信息（异步，不阻塞播放）
+  void getSongInfo(nextSong.id, nextSong.platform)
+    .then((info) => {
+      if (!info || currentLoadingSongId !== songId) return
+      if (!nextSong.coverUrl) {
+        nextSong.coverUrl = info.pic || getCoverUrl(nextSong.id, nextSong.platform)
+      }
+      if (!nextSong.album) {
+        nextSong.album = info.album
+      }
+      updateMediaSessionMetadata(nextSong)
+    })
+    .catch(() => {})
+
+  // 直接设置新的 src 并播放，保持音频会话连续
+  const url = getPlayUrl(nextSong.id, nextSong.platform, audioQuality.value)
+  audioRef.value.src = url
+
+  try {
+    await audioRef.value.play()
+    shouldPlayOnCanPlay = false
+    isSwitchingSong = false
+  } catch (e: any) {
+    console.warn('Direct play next failed:', e?.name)
+    // 保持 shouldPlayOnCanPlay = true，等待 canplay 事件
+  }
+
+  loadLyrics(nextSong.id, nextSong.platform)
 }
 
 async function loadLyrics(id: string, platform: string) {
