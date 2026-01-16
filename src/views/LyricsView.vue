@@ -74,7 +74,7 @@
 
           class="flex items-center justify-center size-10 rounded-full bg-transparent hover:bg-white/10 transition-all duration-300 text-white/70 hover:text-white hover:scale-105 active:scale-95"
 
-          title="鍏ㄥ睆"
+          title="全屏"
 
           @click="toggleFullscreen"
 
@@ -150,7 +150,7 @@
 
               <span class="material-symbols-outlined text-[14px]">swipe</span>
 
-              宸︽粦鏌ョ湅姝岃瘝
+              左滑查看歌词
 
             </div>
 
@@ -216,7 +216,7 @@
 
                 <span class="material-symbols-outlined text-6xl mb-4 block opacity-40">lyrics</span>
 
-                <p class="font-medium">鏆傛棤姝岃瘝</p>
+                <p class="font-medium">暂无歌词</p>
 
               </div>
 
@@ -602,7 +602,7 @@ const displayProgress = computed(() => {
 
 
 
-// 璁剧疆姝岃瘝鍏冪礌寮曠敤
+// 设置歌词元素引用
 
 const setLyricRef = (el: any, index: number) => {
 
@@ -616,7 +616,7 @@ const setLyricRef = (el: any, index: number) => {
 
 
 
-// 闊抽噺鍥炬爣
+// 音量图标
 
 const volumeIcon = computed(() => {
 
@@ -632,7 +632,7 @@ const volumeIcon = computed(() => {
 
 
 
-// 妫�鏌ュ枩娆㈢姸鎬?
+// 检查喜欢状态
 
 const checkLiked = async () => {
 
@@ -658,7 +658,7 @@ const checkLiked = async () => {
 
 
 
-// 鐩戝惉褰撳墠姝屾洸鍙樺寲
+// 监听当前歌曲变化
 
 watch(currentSong, () => {
 
@@ -668,7 +668,7 @@ watch(currentSong, () => {
 
 
 
-// 鐩戝惉姝岃瘝绱㈠紩鍙樺寲锛岃嚜鍔ㄦ粴鍔?
+// 监听歌词索引变化，自动滚动
 
 watch(currentLyricIndex, (index) => {
 
@@ -692,7 +692,7 @@ watch(currentLyricIndex, (index) => {
 
 
 
-// 鐩戝惉鍏ㄥ睆鍙樺寲
+// 监听全屏变化
 
 const handleFullscreenChange = () => {
 
@@ -890,7 +890,7 @@ const toggleMute = () => {
 
 
 
-// 鍏ㄥ睆鍒囨崲
+// 全屏切换
 
 const toggleFullscreen = async () => {
 
@@ -916,7 +916,7 @@ const toggleFullscreen = async () => {
 
 
 
-// 杩涘害鏉℃嫋鍔?
+// 进度条拖动
 
 const getClientX = (event: MouseEvent | TouchEvent) => {
 

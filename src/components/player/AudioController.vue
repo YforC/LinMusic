@@ -22,6 +22,11 @@ let audioNode: HTMLAudioElement | null = null
 let endHandled = false
 // 标记是否正在 seek，防止 timeupdate 覆盖目标位置
 let isSeeking = false
+// 重试计数器
+let retryCount = 0
+const MAX_RETRIES = 3
+// 标记是否正在切换歌曲
+let isSwitchingSong = false
 
 Howler.autoSuspend = false
 Howler.autoUnlock = true
@@ -46,16 +51,20 @@ const updateMediaSessionPosition = () => {
   const duration = howl.duration()
   const position = howl.seek() as number
   if (!Number.isFinite(duration) || duration === 0 || !Number.isFinite(position)) return
-  navigator.mediaSession.setPositionState({
-    duration,
-    playbackRate: howl.rate(),
-    position
-  })
+  try {
+    navigator.mediaSession.setPositionState({
+      duration,
+      playbackRate: howl.rate(),
+      position: Math.min(position, duration)
+    })
+  } catch (e) {
+    // 忽略 position state 错误
+  }
 }
 
 const handleNativeTimeUpdate = () => {
-  // 如果正在 seek，不更新 currentTime
-  if (isSeeking) return
+  // 如果正在 seek 或切换歌曲，不更新 currentTime
+  if (isSeeking || isSwitchingSong) return
   if (!audioNode) return
   const position = audioNode.currentTime
   if (!Number.isFinite(position)) return
@@ -87,7 +96,7 @@ const bindAudioNodeListeners = () => {
   const node = (howl as any)?._sounds?.[0]?._node as HTMLAudioElement | undefined
   if (!node) return
   audioNode = node
-  audioNode.preload = 'metadata'
+  audioNode.preload = 'auto'
   audioNode.setAttribute('playsinline', 'true')
   audioNode.setAttribute('webkit-playsinline', 'true')
   audioNode.setAttribute('x-webkit-airplay', 'allow')
@@ -169,16 +178,17 @@ const registerMediaSessionHandlers = () => {
   })
   setMediaSessionHandler('seekto', (details) => {
     if (typeof details.seekTime === 'number') {
-      playerStore.seekTo(details.seekTime)
+      seek(details.seekTime)
     }
   })
   setMediaSessionHandler('seekbackward', (details) => {
     const offset = details.seekOffset ?? 10
-    playerStore.seekTo(getSeekBase() - offset)
+    seek(Math.max(0, getSeekBase() - offset))
   })
   setMediaSessionHandler('seekforward', (details) => {
     const offset = details.seekOffset ?? 10
-    playerStore.seekTo(getSeekBase() + offset)
+    const duration = playerStore.duration
+    seek(Math.min(duration, getSeekBase() + offset))
   })
   setMediaSessionHandler('stop', () => {
     if (playerStore.isPlaying) playerStore.togglePlay()
@@ -190,20 +200,32 @@ function seek(time: number) {
   if (!howl) return
 
   isSeeking = true
+  const clampedTime = Math.max(0, Math.min(playerStore.duration, time))
+
   // 立即同步 currentTime，避免进度条跳动
-  playerStore.currentTime = time
+  playerStore.currentTime = clampedTime
 
   // 直接操作底层 audio 元素以获得更精确的 seek
   if (audioNode) {
-    audioNode.currentTime = time
+    try {
+      audioNode.currentTime = clampedTime
+    } catch (e) {
+      // 忽略 seek 错误
+    }
   }
-  howl.seek(time)
+
+  try {
+    howl.seek(clampedTime)
+  } catch (e) {
+    // 忽略 seek 错误
+  }
+
   updateMediaSessionPosition()
 
   // 延迟重置 isSeeking，等待 seek 完成
   setTimeout(() => {
     isSeeking = false
-  }, 300)
+  }, 500)
 }
 
 // 注册 seek 处理器
@@ -218,6 +240,7 @@ onMounted(() => {
 function handleTrackEnd() {
   if (endHandled) return
   endHandled = true
+
   // 直接调用，不使用 Promise，避免 iOS 后台问题
   const advanced = handleSongEnd()
   if (!advanced) {
@@ -225,11 +248,17 @@ function handleTrackEnd() {
   }
 }
 
-// 播放歌曲
-async function playSong() {
+// 播放歌曲（带重试机制）
+async function playSong(isRetry = false) {
   if (!currentSong.value) return
 
   const song = currentSong.value
+
+  if (!isRetry) {
+    retryCount = 0
+    isSwitchingSong = true
+  }
+
   endHandled = false
   detachAudioNodeListeners()
   registerMediaSessionHandlers()
@@ -246,12 +275,16 @@ async function playSong() {
   }
 
   playerStore.isLoading = true
-  playerStore.currentTime = 0
+  if (!isRetry) {
+    playerStore.currentTime = 0
+  }
 
   void resumeAudioContext()
 
   try {
     updateMediaSessionMetadata(song)
+
+    // 异步获取歌曲信息，不阻塞播放
     void getSongInfo(song.id, song.platform)
       .then((info) => {
         if (!info) return
@@ -274,15 +307,19 @@ async function playSong() {
       html5: true,
       format: ['mp3', 'flac', 'wav', 'ogg'],
       volume: volume.value,
+      preload: true,
       onload: () => {
         playerStore.duration = howl?.duration() || 0
         playerStore.isLoading = false
+        isSwitchingSong = false
+        retryCount = 0
         updateMediaSessionPosition()
         bindAudioNodeListeners()
       },
       onplay: () => {
         bindAudioNodeListeners()
         playerStore.isPlaying = true
+        isSwitchingSong = false
         updateProgress()
       },
       onpause: () => {
@@ -308,13 +345,11 @@ async function playSong() {
       },
       onloaderror: (id, error) => {
         console.error('Load error:', id, error)
-        playerStore.isLoading = false
+        handleLoadError()
       },
       onplayerror: (id, error) => {
         console.error('Play error:', id, error)
-        howl?.once('unlock', () => {
-          howl?.play()
-        })
+        handlePlayError()
       }
     })
 
@@ -322,14 +357,57 @@ async function playSong() {
     loadLyrics(song.id, song.platform)
   } catch (error) {
     console.error('Play failed:', error)
-    playerStore.isLoading = false
+    handleLoadError()
   }
+}
+
+// 处理加载错误
+function handleLoadError() {
+  playerStore.isLoading = false
+  isSwitchingSong = false
+
+  if (retryCount < MAX_RETRIES) {
+    retryCount++
+    console.log(`Retrying... (${retryCount}/${MAX_RETRIES})`)
+    // 延迟重试
+    setTimeout(() => {
+      if (currentSong.value) {
+        playSong(true)
+      }
+    }, 1000 * retryCount)
+  } else {
+    // 重试次数用完，尝试播放下一首
+    console.log('Max retries reached, trying next song')
+    retryCount = 0
+    const playlist = playerStore.playlist
+    const currentIndex = playerStore.currentIndex
+    if (playlist.length > 1 && currentIndex < playlist.length - 1) {
+      playerStore.playNext()
+    } else {
+      playerStore.isPlaying = false
+    }
+  }
+}
+
+// 处理播放错误
+function handlePlayError() {
+  // 尝试解锁并重新播放
+  howl?.once('unlock', () => {
+    howl?.play()
+  })
+
+  // 如果 3 秒后还没播放，尝试重新加载
+  setTimeout(() => {
+    if (howl && !howl.playing() && playerStore.isPlaying) {
+      handleLoadError()
+    }
+  }, 3000)
 }
 
 function updateProgress() {
   if (howl && playerStore.isPlaying) {
-    // 如果正在 seek，不要覆盖 currentTime
-    if (!isSeeking) {
+    // 如果正在 seek 或切换歌曲，不要覆盖 currentTime
+    if (!isSeeking && !isSwitchingSong) {
       const pos = howl.seek() as number
       if (Number.isFinite(pos)) {
         playerStore.currentTime = pos
