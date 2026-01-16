@@ -38,15 +38,34 @@ let retryCount = 0
 const MAX_RETRIES = 3
 let isSwitchingSong = false
 let currentLoadingSongId = ''
+let isAutoNexting = false
 
 const updateMediaSessionMetadata = (song: Song) => {
   if (!('mediaSession' in navigator)) return
+
+  // 构建封面 URL
+  let artworkUrl = song.coverUrl || ''
+  if (artworkUrl && !artworkUrl.startsWith('http')) {
+    artworkUrl = window.location.origin + artworkUrl
+  }
+
+  const artwork = artworkUrl
+    ? [
+        { src: artworkUrl, sizes: '96x96', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '128x128', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '192x192', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '256x256', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '384x384', type: 'image/jpeg' },
+        { src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }
+      ]
+    : []
 
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.name || 'Unknown',
       artist: song.artist || 'Unknown Artist',
-      album: song.album || ''
+      album: song.album || '',
+      artwork
     })
   } catch (e) {
     console.warn('Failed to set media session metadata:', e)
@@ -101,6 +120,7 @@ const handleLoadedMetadata = () => {
 const handleCanPlay = () => {
   playerStore.isLoading = false
   isSwitchingSong = false
+  isAutoNexting = false
   retryCount = 0
 }
 
@@ -112,7 +132,8 @@ const handlePlay = () => {
 }
 
 const handlePause = () => {
-  if (!isSeeking && !isSwitchingSong) {
+  // 切歌、seeking、或自动切歌时不更新状态
+  if (!isSeeking && !isSwitchingSong && !isAutoNexting) {
     playerStore.isPlaying = false
   }
   if ('mediaSession' in navigator) {
@@ -132,6 +153,7 @@ const handleWaiting = () => {
 const handlePlaying = () => {
   playerStore.isLoading = false
   playerStore.isPlaying = true
+  isAutoNexting = false
 }
 
 const handleSeeked = () => {
@@ -337,6 +359,9 @@ function handleSongEnd() {
     return
   }
 
+  // 标记正在自动切歌
+  isAutoNexting = true
+
   switch (mode) {
     case 'single':
       if (audioRef.value) {
@@ -344,14 +369,12 @@ function handleSongEnd() {
         audioRef.value.currentTime = 0
         audioRef.value.play().catch(e => {
           console.warn('Single loop play failed:', e)
+          isAutoNexting = false
         })
       }
       break
 
     case 'loop':
-      playerStore.playNext()
-      break
-
     case 'shuffle':
       playerStore.playNext()
       break
@@ -360,6 +383,7 @@ function handleSongEnd() {
       if (currentIndex < playlist.length - 1) {
         playerStore.playNext()
       } else {
+        isAutoNexting = false
         playerStore.isPlaying = false
       }
       break
