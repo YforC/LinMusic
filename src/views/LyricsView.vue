@@ -264,38 +264,10 @@
 
             </button>
 
-            <div class="flex items-center gap-2">
-
-              <button class="btn-icon text-white/40 hover:text-white transition-all duration-300" @click="toggleMute">
-
-                <Transition name="volume-icon" mode="out-in">
-
-                  <span :key="volumeIcon" class="material-symbols-outlined" style="font-size: 20px;">{{ volumeIcon }}</span>
-
-                </Transition>
-
-              </button>
-
-              <div
-
-                class="volume-slider h-1 w-20 flex-1 cursor-pointer"
-
-                @mousedown="startVolumeDrag"
-
-                @touchstart.prevent="startVolumeDrag"
-
-              >
-
-                <div
-
-                  class="volume-slider-fill"
-
-                  :style="{ width: `${volume * 100}%` }"
-
-                ></div>
-
-              </div>
-
+            <!-- iOS 不支持 JS 控制音量，显示提示使用系统音量 -->
+            <div class="flex items-center gap-2 text-white/40 text-xs">
+              <span class="material-symbols-outlined" style="font-size: 18px;">volume_up</span>
+              <span>使用系统音量</span>
             </div>
 
           </div>
